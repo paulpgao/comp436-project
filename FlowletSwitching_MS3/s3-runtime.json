@@ -1,0 +1,24 @@
+{
+  "target": "bmv2",
+  "p4info": "build/flowletswitching.p4.p4info.txt",
+  "bmv2_json": "build/flowletswitching.json",
+  "table_entries": [
+    {
+      "table": "MyIngress.ecmp_group",
+      "default_action": true,
+      "action_name": "MyIngress.drop",
+      "action_params": { }
+    },
+    {
+      "table": "MyIngress.ecmp_nhop",
+      "match": {
+        "meta.ecmp_select": 0
+      },
+      "action_name": "MyIngress.set_nhop",
+      "action_params": {
+        "nhop_ipv4": "10.0.2.2",
+        "port" : 2
+      }
+    }
+  ]
+}
