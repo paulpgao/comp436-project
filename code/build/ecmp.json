@@ -14,10 +14,7 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
-        ["clone_spec", 32, false],
         ["instance_type", 32, false],
-        ["drop", 1, false],
-        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -25,14 +22,12 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
-        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
-        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
-        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["_padding", 5, false]
+        ["priority", 3, false],
+        ["_padding", 3, false]
       ]
     },
     {
@@ -85,7 +80,10 @@
       "fields" : [
         ["protocol", 8, false],
         ["queryType", 2, false],
-        ["padding", 6, false]
+        ["isNull", 1, false],
+        ["padding", 5, false],
+        ["key", 32, false],
+        ["value", 32, false]
       ]
     }
   ],
@@ -295,23 +293,48 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 233,
+        "line" : 238,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
-      "order" : ["ethernet", "ipv4", "tcp", "kvsQuery"]
+      "order" : ["ethernet", "ipv4", "kvsQuery", "tcp"]
     }
   ],
   "meter_arrays" : [],
   "counter_arrays" : [],
-  "register_arrays" : [],
+  "register_arrays" : [
+    {
+      "name" : "MyIngress.database",
+      "id" : 0,
+      "source_info" : {
+        "filename" : "ecmp.p4",
+        "line" : 139,
+        "column" : 29,
+        "source_fragment" : "database"
+      },
+      "size" : 1024,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "MyIngress.isFilled",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "ecmp.p4",
+        "line" : 140,
+        "column" : 28,
+        "source_fragment" : "isFilled"
+      },
+      "size" : 1024,
+      "bitwidth" : 1
+    }
+  ],
   "calculations" : [
     {
       "name" : "calc",
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 210,
+        "line" : 215,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -365,28 +388,409 @@
     }
   ],
   "learn_lists" : [],
-  "actions" : [],
+  "actions" : [
+    {
+      "name" : "NoAction",
+      "id" : 0,
+      "runtime_data" : [],
+      "primitives" : []
+    },
+    {
+      "name" : "NoAction",
+      "id" : 1,
+      "runtime_data" : [],
+      "primitives" : []
+    },
+    {
+      "name" : "MyIngress.set_nhop",
+      "id" : 2,
+      "runtime_data" : [
+        {
+          "name" : "nhop_ipv4",
+          "bitwidth" : 32
+        },
+        {
+          "name" : "port",
+          "bitwidth" : 9
+        }
+      ],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 0
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 144,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.dstAddr = nhop_ipv4"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 1
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 145,
+            "column" : 8,
+            "source_fragment" : "standard_metadata.egress_spec = port"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ttl"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["ipv4", "ttl"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xff"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 146,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.drop",
+      "id" : 3,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "mark_to_drop",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "standard_metadata"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 150,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.drop",
+      "id" : 4,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "mark_to_drop",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "standard_metadata"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 150,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.get",
+      "id" : 5,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "value"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.database"
+            },
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "key"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 154,
+            "column" : 8,
+            "source_fragment" : "database.read(hdr.kvsQuery.value, hdr.kvsQuery.key)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "isNull"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.isFilled"
+            },
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "key"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 155,
+            "column" : 8,
+            "source_fragment" : "isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.put",
+      "id" : 6,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.database"
+            },
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "key"]
+            },
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "value"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 159,
+            "column" : 8,
+            "source_fragment" : "database.write(hdr.kvsQuery.key, hdr.kvsQuery.value)"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.isFilled"
+            },
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "key"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 160,
+            "column" : 8,
+            "source_fragment" : "isFilled.write(hdr.kvsQuery.key, 1)"
+          }
+        }
+      ]
+    }
+  ],
   "pipelines" : [
     {
       "name" : "ingress",
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 132,
+        "line" : 135,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
-      "init_table" : null,
-      "tables" : [],
+      "init_table" : "node_2",
+      "tables" : [
+        {
+          "name" : "MyIngress.Forwarding",
+          "id" : 0,
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 163,
+            "column" : 10,
+            "source_fragment" : "Forwarding"
+          },
+          "key" : [
+            {
+              "match_type" : "lpm",
+              "name" : "hdr.ipv4.dstAddr",
+              "target" : ["ipv4", "dstAddr"],
+              "mask" : null
+            }
+          ],
+          "match_type" : "lpm",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [3, 2, 0],
+          "actions" : ["MyIngress.drop", "MyIngress.set_nhop", "NoAction"],
+          "base_default_next" : "MyIngress.Ops",
+          "next_tables" : {
+            "MyIngress.drop" : "MyIngress.Ops",
+            "MyIngress.set_nhop" : "MyIngress.Ops",
+            "NoAction" : "MyIngress.Ops"
+          },
+          "default_entry" : {
+            "action_id" : 0,
+            "action_const" : false,
+            "action_data" : [],
+            "action_entry_const" : false
+          }
+        },
+        {
+          "name" : "MyIngress.Ops",
+          "id" : 1,
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 177,
+            "column" : 10,
+            "source_fragment" : "Ops"
+          },
+          "key" : [
+            {
+              "match_type" : "exact",
+              "name" : "hdr.kvsQuery.queryType",
+              "target" : ["kvsQuery", "queryType"],
+              "mask" : null
+            }
+          ],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [4, 5, 6, 1],
+          "actions" : ["MyIngress.drop", "MyIngress.get", "MyIngress.put", "NoAction"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyIngress.drop" : null,
+            "MyIngress.get" : null,
+            "MyIngress.put" : null,
+            "NoAction" : null
+          },
+          "default_entry" : {
+            "action_id" : 1,
+            "action_const" : false,
+            "action_data" : [],
+            "action_entry_const" : false
+          }
+        }
+      ],
       "action_profiles" : [],
-      "conditionals" : []
+      "conditionals" : [
+        {
+          "name" : "node_2",
+          "id" : 0,
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 191,
+            "column" : 9,
+            "source_fragment" : "hdr.ipv4.isValid() && hdr.ipv4.ttl > 0"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "d2b",
+                  "left" : null,
+                  "right" : {
+                    "type" : "field",
+                    "value" : ["ipv4", "$valid$"]
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : ">",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["ipv4", "ttl"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x00"
+                  }
+                }
+              }
+            }
+          },
+          "false_next" : null,
+          "true_next" : "MyIngress.Forwarding"
+        }
+      ]
     },
     {
       "name" : "egress",
       "id" : 1,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 198,
+        "line" : 203,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -402,7 +806,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 210,
+        "line" : 215,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -452,24 +856,16 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
-      "intrinsic_metadata.lf_field_list",
-      ["standard_metadata", "lf_field_list"]
-    ],
-    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
-    ],
-    [
-      "intrinsic_metadata.resubmit_flag",
-      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.recirculate_flag",
-      ["standard_metadata", "recirculate_flag"]
+      "intrinsic_metadata.priority",
+      ["standard_metadata", "priority"]
     ]
   ],
   "program" : "ecmp.p4",

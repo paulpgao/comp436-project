@@ -56,7 +56,10 @@ header tcp_t {
 header kvsQuery_t {
     bit<8> protocol;
     bit<2> queryType;
-    bit<6> padding;
+    bit<1> isNull;
+    bit<5> padding;
+    bit<32> key;
+    bit<32> value;
 }
 
 
@@ -133,60 +136,62 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    // register <bit<32>>(2) s2counts;
-    // register <bit<32>>(2) s3counts;
+    register <bit<32>>(1024) database;
+    register <bit<1>>(1024) isFilled;
+
+    // Setting the egress port and IP destination.
+    action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
+        hdr.ipv4.dstAddr = nhop_ipv4;
+        standard_metadata.egress_spec = port;
+        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+    }
 
     action drop() {
         mark_to_drop(standard_metadata);
     }
 
-    // action set_ecmp_select(bit<16> ecmp_base, bit<32> ecmp_count) {
-    //     // Hash 5-tuple to store 
-    //     hash(meta.ecmp_select,
-    //     HashAlgorithm.crc16,
-    //     ecmp_base,
-    //     { hdr.ipv4.srcAddr,
-    //       hdr.ipv4.dstAddr,
-    //           hdr.ipv4.protocol,
-    //           hdr.tcp.srcPort,
-    //           hdr.tcp.dstPort },
-    //     ecmp_count);
+    action get() {
+        database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
+        isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
+    }
 
-    //     // Sets srcPort (temporarily) to the egress port where apply stores statistics.
-    //     hdr.tcp.srcPort = meta.ecmp_select + 2;  
-    // }
-
-    // action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
-    //     hdr.ipv4.dstAddr = nhop_ipv4;
-    //     standard_metadata.egress_spec = port;
-    //     hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-    // }
-
-    // table ecmp_group {
-    //     key = {
-    //         hdr.ipv4.dstAddr: lpm;
-    //     }
-    //     actions = {
-    //         drop;
-    //         set_ecmp_select;
-    //     }
-    //     size = 1024;
-    // }
-
-    // table ecmp_nhop {
-    //     key = {
-    //         meta.ecmp_select: exact;
-    //     }
-    //     actions = {
-    //         drop;
-    //         set_nhop;
-    //     }
-    //     size = 2;
-    // }
+    action put() {
+        database.write(hdr.kvsQuery.key, hdr.kvsQuery.value);
+        isFilled.write(hdr.kvsQuery.key, 1);
+    }
     
+    table Forwarding {
+        key = {
+            hdr.ipv4.dstAddr: lpm;
+        }
+        actions = {
+            drop;
+            set_nhop;
+        }
+    }
+
+    // 0: GET
+    // 1: PUT
+    // 2: RANGE
+    // 3: SELECT
+    table Ops {
+        key = {
+            hdr.kvsQuery.queryType: exact;
+        }
+        actions = {
+            drop;
+            get;
+            put;
+            NoAction;
+        }
+        default_action = NoAction();
+    }
+
     apply {
     	if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
-
+    		//recirculate(meta);
+    		Forwarding.apply();
+    		Ops.apply();
         }
     }
 }
@@ -234,8 +239,8 @@ control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
-        packet.emit(hdr.tcp);
         packet.emit(hdr.kvsQuery);
+        packet.emit(hdr.tcp);
     }
 }
 

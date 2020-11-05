@@ -12,7 +12,6 @@ from scapy.all import Packet
 from scapy.all import Ether, IP, UDP, TCP
 from scapy.all import BitField, ShortField, IntField, bind_layers
 
-
 QUERY_PROTOCOL = 250
 KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
@@ -21,7 +20,10 @@ class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
                 BitField("queryType", 0, 2),
-                BitField("padding", 0, 6)]
+                BitField("isNull", 0, 1),
+                BitField("padding", 0, 5),
+                IntField("key",0),
+                IntField("value", 0)]
 
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
 bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
@@ -49,18 +51,31 @@ def main():
     #     exit(1)
 
     if len(sys.argv) < 2:
-        print 'pass 1 argument:"<message>"'
+        print 'pass 1 argument:"<ops>"'
         exit(1)
 
     # Specific IP for Switch 1 entrance
-    addr = '10.0.0.1'
+    addr = '10.0.1.1'
     iface = get_if()
 
     print "sending on interface %s to %s" % (iface, str(addr))
 
-    # For each flow, send 10-20 packets with random length message
-    pkt =  Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff'
-    pkt = pkt / IP(dst=addr) / KVSQuery(protocol=KVSQUERY_PROTOCOL) / TCP(dport=1234, sport=random.randint(49152,65535)) / sys.argv[1]
+    if sys.argv[1] == "get":
+        if len(sys.argv) < 3:
+            print 'pass 1 more argument:"<key>"'
+            exit(1)
+        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=0, key=int(sys.argv[2])) / TCP(dport=1234, sport=random.randint(49152,65535)) / "get"
+    elif sys.argv[1] == "put":
+        if len(sys.argv) < 4:
+            print 'pass 2 more argument:"<key>" "<value>"'
+            exit(1)
+        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=1, key=int(sys.argv[2]), value=int(sys.argv[3])) / TCP(dport=1234, sport=random.randint(49152,65535)) / "put"
+
+
+        # pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
+        # pkt = pkt / IP(dst=addr, proto=QUERY_PROTOCOL) / Query(protocol=TCP_PROTOCOL) / TCP(dport=1234, sport=random.randint(49152,65535)) / "query"
     sendp(pkt, iface=iface, verbose=False)
 
 
