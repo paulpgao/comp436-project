@@ -1,0 +1,61 @@
+Calling target program-options parser
+Adding interface s1-eth1 as port 1
+[04:56:27.608] [bmv2] [D] [thread 6506] Adding interface s1-eth1 as port 1
+I1105 04:56:27.638972322    6506 server_builder.cc:247]      Synchronous server. Num CQs: 1, Min pollers: 1, Max Pollers: 2147483647, CQ timeout (msec): 1000
+Server listening on 0.0.0.0:50051
+[04:56:27.641] [bmv2] [I] [thread 6506] Starting Thrift server on port 9090
+[04:56:27.641] [bmv2] [I] [thread 6506] Thrift server was started
+New connection
+P4Runtime SetForwardingPipelineConfig
+[04:56:29.162] [bmv2] [W] [thread 6528] [P4Runtime] p4::tmp::P4DeviceConfig is deprecated
+[04:56:29.166] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Processing packet received on port 1
+[04:56:29.166] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Parser 'parser': start
+[04:56:29.166] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Parser 'parser' entering state 'start'
+[04:56:29.167] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Extracting header 'ethernet'
+[04:56:29.167] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Parser state 'start': key is 86dd
+[04:56:29.167] [bmv2] [T] [thread 6536] [0.0] [cxt 0] Bytes parsed: 14
+[04:56:29.167] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Parser 'parser': end
+[04:56:29.167] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Pipeline 'ingress': start
+[04:56:29.167] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Pipeline 'ingress': end
+[04:56:29.167] [bmv2] [D] [thread 6536] [0.0] [cxt 0] Egress port is 0
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Processing packet received on port 1
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Parser 'parser': start
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Parser 'parser' entering state 'start'
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Extracting header 'ethernet'
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Parser state 'start': key is 86dd
+[04:56:29.167] [bmv2] [T] [thread 6536] [1.0] [cxt 0] Bytes parsed: 14
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Parser 'parser': end
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Pipeline 'ingress': start
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Pipeline 'ingress': end
+[04:56:29.167] [bmv2] [D] [thread 6536] [1.0] [cxt 0] Egress port is 0
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Processing packet received on port 1
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Parser 'parser': start
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Parser 'parser' entering state 'start'
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Extracting header 'ethernet'
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Parser state 'start': key is 86dd
+[04:56:29.167] [bmv2] [T] [thread 6536] [2.0] [cxt 0] Bytes parsed: 14
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Parser 'parser': end
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Pipeline 'ingress': start
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Pipeline 'ingress': end
+[04:56:29.167] [bmv2] [D] [thread 6536] [2.0] [cxt 0] Egress port is 0
+[04:56:29.167] [bmv2] [D] [thread 6537] [0.0] [cxt 0] Pipeline 'egress': start
+[04:56:29.167] [bmv2] [D] [thread 6537] [0.0] [cxt 0] Pipeline 'egress': end
+[04:56:29.167] [bmv2] [D] [thread 6537] [0.0] [cxt 0] Deparser 'deparser': start
+[04:56:29.167] [bmv2] [T] [thread 6537] [0.0] [cxt 0] Skipping checksum 'cksum' update because condition not met
+[04:56:29.167] [bmv2] [D] [thread 6537] [0.0] [cxt 0] Deparsing header 'ethernet'
+[04:56:29.167] [bmv2] [D] [thread 6537] [0.0] [cxt 0] Deparser 'deparser': end
+[04:56:29.167] [bmv2] [D] [thread 6537] [1.0] [cxt 0] Pipeline 'egress': start
+[04:56:29.167] [bmv2] [D] [thread 6537] [1.0] [cxt 0] Pipeline 'egress': end
+[04:56:29.167] [bmv2] [D] [thread 6537] [1.0] [cxt 0] Deparser 'deparser': start
+[04:56:29.167] [bmv2] [T] [thread 6537] [1.0] [cxt 0] Skipping checksum 'cksum' update because condition not met
+[04:56:29.167] [bmv2] [D] [thread 6537] [1.0] [cxt 0] Deparsing header 'ethernet'
+[04:56:29.167] [bmv2] [D] [thread 6537] [1.0] [cxt 0] Deparser 'deparser': end
+[04:56:29.167] [bmv2] [D] [thread 6537] [2.0] [cxt 0] Pipeline 'egress': start
+[04:56:29.167] [bmv2] [D] [thread 6537] [2.0] [cxt 0] Pipeline 'egress': end
+[04:56:29.167] [bmv2] [D] [thread 6537] [2.0] [cxt 0] Deparser 'deparser': start
+[04:56:29.167] [bmv2] [T] [thread 6537] [2.0] [cxt 0] Skipping checksum 'cksum' update because condition not met
+[04:56:29.167] [bmv2] [D] [thread 6537] [2.0] [cxt 0] Deparsing header 'ethernet'
+[04:56:29.167] [bmv2] [D] [thread 6537] [2.0] [cxt 0] Deparser 'deparser': end
+[04:56:29.167] [bmv2] [D] [thread 6541] [0.0] [cxt 0] Transmitting packet of size 90 out of port 0
+[04:56:29.167] [bmv2] [D] [thread 6541] [1.0] [cxt 0] Transmitting packet of size 78 out of port 0
+[04:56:29.167] [bmv2] [D] [thread 6541] [2.0] [cxt 0] Transmitting packet of size 90 out of port 0

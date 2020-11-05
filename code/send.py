@@ -14,19 +14,17 @@ from scapy.all import BitField, ShortField, IntField, bind_layers
 
 
 QUERY_PROTOCOL = 250
+KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
 
-# Special query header packet
-class Query(Packet):
-    name = "Query"
-    fields_desc=[BitField("protocol", 0, 8),
-                 IntField("s2PacketCount", 0),
-                 IntField("s3PacketCount", 0),
-                 IntField("s2BytesCount", 0),
-                 IntField("s3BytesCount", 0)]
+class KVSQuery(Packet):
+    name = "KVSQuery"
+    fields_desc= [BitField("protocol", 0, 8),
+                BitField("queryType", 0, 2),
+                BitField("padding", 0, 6)]
 
-bind_layers(IP, Query, proto = QUERY_PROTOCOL)
-bind_layers(Query, TCP, protocol = TCP_PROTOCOL)
+bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
+bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
 
 def get_if():
     ifs=get_if_list()
@@ -60,19 +58,9 @@ def main():
 
     print "sending on interface %s to %s" % (iface, str(addr))
 
-    # Create 100 random flows
-    flows = random.sample(range(49152, 65535), 100)
-
     # For each flow, send 10-20 packets with random length message
-    for flow in flows:
-        for i in range(random.randint(10, 20)):
-            pkt =  Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-            pkt = pkt /IP(dst=addr) / TCP(dport=1234, sport=flow, seq=i) / randStr(random.randint(1, 100))
-            sendp(pkt, iface=iface, verbose=False)
-
-    # Send query packet at the end
-    pkt =  Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-    pkt = pkt /IP(dst=addr) / Query(protocol=QUERY_PROTOCOL) / TCP(dport=1234, sport=random.randint(49152,65535)) / sys.argv[1]
+    pkt =  Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff'
+    pkt = pkt / IP(dst=addr) / KVSQuery(protocol=KVSQUERY_PROTOCOL) / TCP(dport=1234, sport=random.randint(49152,65535)) / sys.argv[1]
     sendp(pkt, iface=iface, verbose=False)
 
 
