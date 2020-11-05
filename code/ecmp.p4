@@ -192,6 +192,7 @@ control MyIngress(inout headers hdr,
     		//recirculate(meta);
     		Forwarding.apply();
     		Ops.apply();
+            hdr.kvsQuery.padding = 1;
         }
     }
 }

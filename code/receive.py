@@ -62,13 +62,11 @@ class IPOption_MRI(IPOption):
 
 
 def handle_pkt(pkt):
-    if KVSQuery in pkt:
+    if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
         if pkt[KVSQuery].queryType == 0:
             print pkt[KVSQuery].value
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
-    elif TCP in pkt and pkt[TCP].dport == 1234:
-        print ('here')
 
 
 

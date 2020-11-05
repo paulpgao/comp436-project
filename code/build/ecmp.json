@@ -14,7 +14,10 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
+        ["clone_spec", 32, false],
         ["instance_type", 32, false],
+        ["drop", 1, false],
+        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -22,12 +25,14 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
+        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
+        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
+        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["priority", 3, false],
-        ["_padding", 3, false]
+        ["_padding", 5, false]
       ]
     },
     {
@@ -293,7 +298,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 238,
+        "line" : 239,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -334,7 +339,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 215,
+        "line" : 216,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -646,6 +651,32 @@
           }
         }
       ]
+    },
+    {
+      "name" : "act",
+      "id" : 7,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "padding"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 195,
+            "column" : 12,
+            "source_fragment" : "hdr.kvsQuery.padding = 1"
+          }
+        }
+      ]
     }
   ],
   "pipelines" : [
@@ -723,18 +754,47 @@
           "direct_meters" : null,
           "action_ids" : [4, 5, 6, 1],
           "actions" : ["MyIngress.drop", "MyIngress.get", "MyIngress.put", "NoAction"],
-          "base_default_next" : null,
+          "base_default_next" : "tbl_act",
           "next_tables" : {
-            "MyIngress.drop" : null,
-            "MyIngress.get" : null,
-            "MyIngress.put" : null,
-            "NoAction" : null
+            "MyIngress.drop" : "tbl_act",
+            "MyIngress.get" : "tbl_act",
+            "MyIngress.put" : "tbl_act",
+            "NoAction" : "tbl_act"
           },
           "default_entry" : {
             "action_id" : 1,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
+          }
+        },
+        {
+          "name" : "tbl_act",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 195,
+            "column" : 33,
+            "source_fragment" : "="
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [7],
+          "actions" : ["act"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "act" : null
+          },
+          "default_entry" : {
+            "action_id" : 7,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
           }
         }
       ],
@@ -790,7 +850,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 203,
+        "line" : 204,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -806,7 +866,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 215,
+        "line" : 216,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -856,16 +916,24 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
+      "intrinsic_metadata.lf_field_list",
+      ["standard_metadata", "lf_field_list"]
+    ],
+    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.resubmit_flag",
+      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.priority",
-      ["standard_metadata", "priority"]
+      "intrinsic_metadata.recirculate_flag",
+      ["standard_metadata", "recirculate_flag"]
     ]
   ],
   "program" : "ecmp.p4",
