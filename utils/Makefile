@@ -9,7 +9,7 @@ RUN_SCRIPT = ../utils/run_exercise.py
 source := $(wildcard *.p4)
 outfile := $(source:.p4=.json)
 
-compiled_json := $(BUILD_DIR)/$(outfile)
+compiled_json := $(addprefix $(BUILD_DIR)/,$(outfile))​
 
 # Define NO_P4 to start BMv2 without a program
 ifndef NO_P4
