@@ -17,12 +17,20 @@ TCP_PROTOCOL = 6
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
-                BitField("queryType", 0, 2),
-                BitField("isNull", 0, 1),
-                BitField("padding", 0, 5),
                 IntField("key", 0),
-                IntField("value", 0),
-                IntField("key2", 0)]
+                IntField("key2", 0),
+                IntField("value", 0),                
+                IntField("value2", 0),
+                IntField("value3", 0),
+                IntField("value4", 0),
+                IntField("value5", 0),
+                BitField("isNull", 0, 1),
+                BitField("isNull2", 0, 1),
+                BitField("isNull3", 0, 1),
+                BitField("isNull4", 0, 1),
+                BitField("isNull5", 0, 1),
+                BitField("queryType", 0, 2),
+                BitField("padding", 0, 1)]
 
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
 bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
@@ -72,10 +80,19 @@ def handle_pkt(pkt):
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:
-            if pkt[KVSQuery].isNull == 0:
-                print "NULL" # Replace with large number
-            else:
-                print pkt[KVSQuery].value
+            pkt.summary()
+            # value_list = [pkt[KVSQuery].value, pkt[KVSQuery].value2, pkt[KVSQuery].value3, pkt[KVSQuery].value4, pkt[KVSQuery].value5]
+            # valid_list = [pkt[KVSQuery].isNull, pkt[KVSQuery].isNull2, pkt[KVSQuery].isNull3, pkt[KVSQuery].isNull4, pkt[KVSQuery].isNull5]
+            # result_list = ["NULL" if valid_list[i] == 0 else value_list[i] for i in range(5)]
+
+            # if pkt[KVSQuery].key2 % 5 == 0:
+            #     for i in result_list:
+            #         print i
+            # else:
+            #     for i in range(pkt[KVSQuery].key2 % 5):
+            #         print result_list[i]
+        print "------------------------"
+
 
 
 

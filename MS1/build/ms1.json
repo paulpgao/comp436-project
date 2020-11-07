@@ -14,10 +14,7 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
-        ["clone_spec", 32, false],
         ["instance_type", 32, false],
-        ["drop", 1, false],
-        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -25,14 +22,12 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
-        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
-        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
-        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["_padding", 5, false]
+        ["priority", 3, false],
+        ["_padding", 3, false]
       ]
     },
     {
@@ -84,12 +79,20 @@
       "id" : 5,
       "fields" : [
         ["protocol", 8, false],
-        ["queryType", 2, false],
-        ["isNull", 1, false],
-        ["padding", 5, false],
         ["key", 32, false],
+        ["key2", 32, false],
         ["value", 32, false],
-        ["key2", 32, false]
+        ["value2", 32, false],
+        ["value3", 32, false],
+        ["value4", 32, false],
+        ["value5", 32, false],
+        ["isNull", 1, false],
+        ["isNull2", 1, false],
+        ["isNull3", 1, false],
+        ["isNull4", 1, false],
+        ["isNull5", 1, false],
+        ["queryType", 2, false],
+        ["padding", 1, false]
       ]
     },
     {
@@ -97,7 +100,8 @@
       "id" : 6,
       "fields" : [
         ["state", 32, false],
-        ["next_type", 32, false]
+        ["isNull", 1, false],
+        ["padding", 7, false]
       ]
     }
   ],
@@ -178,41 +182,6 @@
       "header_type" : "headerStack_t",
       "metadata" : false,
       "pi_omit" : true
-    },
-    {
-      "name" : "headerStack[5]",
-      "id" : 11,
-      "header_type" : "headerStack_t",
-      "metadata" : false,
-      "pi_omit" : true
-    },
-    {
-      "name" : "headerStack[6]",
-      "id" : 12,
-      "header_type" : "headerStack_t",
-      "metadata" : false,
-      "pi_omit" : true
-    },
-    {
-      "name" : "headerStack[7]",
-      "id" : 13,
-      "header_type" : "headerStack_t",
-      "metadata" : false,
-      "pi_omit" : true
-    },
-    {
-      "name" : "headerStack[8]",
-      "id" : 14,
-      "header_type" : "headerStack_t",
-      "metadata" : false,
-      "pi_omit" : true
-    },
-    {
-      "name" : "headerStack[9]",
-      "id" : 15,
-      "header_type" : "headerStack_t",
-      "metadata" : false,
-      "pi_omit" : true
     }
   ],
   "header_stacks" : [
@@ -220,8 +189,8 @@
       "name" : "headerStack",
       "id" : 0,
       "header_type" : "headerStack_t",
-      "size" : 10,
-      "header_ids" : [6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+      "size" : 5,
+      "header_ids" : [6, 7, 8, 9, 10]
     }
   ],
   "header_union_types" : [],
@@ -233,7 +202,7 @@
       "name" : "metadata",
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 231,
+        "line" : 237,
         "column" : 26,
         "source_fragment" : "meta"
       },
@@ -357,6 +326,12 @@
               "next_state" : "parse_tcp"
             },
             {
+              "type" : "hexstr",
+              "value" : "0xfd",
+              "mask" : null,
+              "next_state" : "parse_headerStack"
+            },
+            {
               "value" : "default",
               "mask" : null,
               "next_state" : null
@@ -370,8 +345,31 @@
           ]
         },
         {
-          "name" : "parse_tcp",
+          "name" : "parse_headerStack",
           "id" : 3,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "stack",
+                  "value" : "headerStack"
+                }
+              ],
+              "op" : "extract"
+            }
+          ],
+          "transitions" : [
+            {
+              "value" : "default",
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : []
+        },
+        {
+          "name" : "parse_tcp",
+          "id" : 4,
           "parser_ops" : [
             {
               "parameters" : [
@@ -402,11 +400,11 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 297,
+        "line" : 321,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
-      "order" : ["ethernet", "ipv4", "kvsQuery", "tcp"]
+      "order" : ["ethernet", "ipv4", "kvsQuery", "headerStack[0]", "headerStack[1]", "headerStack[2]", "headerStack[3]", "headerStack[4]", "tcp"]
     }
   ],
   "meter_arrays" : [],
@@ -417,7 +415,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 162,
+        "line" : 169,
         "column" : 29,
         "source_fragment" : "database"
       },
@@ -429,7 +427,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 163,
+        "line" : 170,
         "column" : 28,
         "source_fragment" : "isFilled"
       },
@@ -443,7 +441,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 274,
+        "line" : 298,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -538,7 +536,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 167,
+            "line" : 174,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.dstAddr = nhop_ipv4"
           }
@@ -557,7 +555,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 168,
+            "line" : 175,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -579,7 +577,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 173,
+            "line" : 180,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -601,7 +599,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 173,
+            "line" : 180,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -631,7 +629,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 177,
+            "line" : 184,
             "column" : 8,
             "source_fragment" : "database.read(hdr.kvsQuery.value, hdr.kvsQuery.key)"
           }
@@ -654,7 +652,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 178,
+            "line" : 185,
             "column" : 8,
             "source_fragment" : "isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key)"
           }
@@ -684,7 +682,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 182,
+            "line" : 189,
             "column" : 8,
             "source_fragment" : "database.write(hdr.kvsQuery.key, hdr.kvsQuery.value)"
           }
@@ -707,7 +705,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 183,
+            "line" : 190,
             "column" : 8,
             "source_fragment" : "isFilled.write(hdr.kvsQuery.key, 1)"
           }
@@ -720,11 +718,45 @@
       "runtime_data" : [],
       "primitives" : [
         {
+          "op" : "push",
+          "parameters" : [
+            {
+              "type" : "header_stack",
+              "value" : "headerStack"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x1"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms1.p4",
+            "line" : 194,
+            "column" : 8,
+            "source_fragment" : "hdr.headerStack.push_front(1)"
+          }
+        },
+        {
+          "op" : "add_header",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "headerStack[0]"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms1.p4",
+            "line" : 195,
+            "column" : 2,
+            "source_fragment" : "hdr.headerStack[0].setValid()"
+          }
+        },
+        {
           "op" : "register_read",
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["kvsQuery", "value"]
+              "value" : ["headerStack[0]", "state"]
             },
             {
               "type" : "register_array",
@@ -737,9 +769,9 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 187,
-            "column" : 8,
-            "source_fragment" : "database.read(hdr.kvsQuery.value, hdr.kvsQuery.key)"
+            "line" : 196,
+            "column" : 2,
+            "source_fragment" : "database.read(hdr.headerStack[0].state, hdr.kvsQuery.key)"
           }
         },
         {
@@ -747,7 +779,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["kvsQuery", "isNull"]
+              "value" : ["headerStack[0]", "isNull"]
             },
             {
               "type" : "register_array",
@@ -760,9 +792,9 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 191,
+            "line" : 197,
             "column" : 8,
-            "source_fragment" : "isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key)"
+            "source_fragment" : "isFilled.read(hdr.headerStack[0].isNull, hdr.kvsQuery.key)"
           }
         }
       ]
@@ -809,7 +841,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 229,
+            "line" : 235,
             "column" : 14,
             "source_fragment" : "hdr.kvsQuery.key = hdr.kvsQuery.key + 1"
           }
@@ -824,7 +856,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 231,
+            "line" : 237,
             "column" : 14,
             "source_fragment" : "recirculate(meta)"
           }
@@ -850,7 +882,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 226,
+            "line" : 232,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.padding = 1"
           }
@@ -864,7 +896,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 158,
+        "line" : 165,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -875,7 +907,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 194,
+            "line" : 200,
             "column" : 10,
             "source_fragment" : "Forwarding"
           },
@@ -913,7 +945,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 208,
+            "line" : 214,
             "column" : 10,
             "source_fragment" : "Ops"
           },
@@ -953,7 +985,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 226,
+            "line" : 232,
             "column" : 33,
             "source_fragment" : "="
           },
@@ -982,7 +1014,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 229,
+            "line" : 235,
             "column" : 31,
             "source_fragment" : "= hdr.kvsQuery.key + 1; ..."
           },
@@ -1014,7 +1046,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 223,
+            "line" : 229,
             "column" : 9,
             "source_fragment" : "hdr.ipv4.isValid() && hdr.ipv4.ttl > 0"
           },
@@ -1057,7 +1089,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 227,
+            "line" : 233,
             "column" : 16,
             "source_fragment" : "hdr.kvsQuery.queryType == 2"
           },
@@ -1083,7 +1115,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 228,
+            "line" : 234,
             "column" : 17,
             "source_fragment" : "hdr.kvsQuery.key < hdr.kvsQuery.key2"
           },
@@ -1111,7 +1143,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 262,
+        "line" : 286,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -1127,7 +1159,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 274,
+        "line" : 298,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -1177,24 +1209,16 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
-      "intrinsic_metadata.lf_field_list",
-      ["standard_metadata", "lf_field_list"]
-    ],
-    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
-    ],
-    [
-      "intrinsic_metadata.resubmit_flag",
-      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.recirculate_flag",
-      ["standard_metadata", "recirculate_flag"]
+      "intrinsic_metadata.priority",
+      ["standard_metadata", "priority"]
     ]
   ],
   "program" : "ms1.p4",

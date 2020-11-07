@@ -13,6 +13,7 @@
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> TYPE_KVSQUERY = 252;
 const bit<8> TYPE_TCP = 6;
+const bit<8> TYPE_HEADERSTACK = 253;
 
 
 /*************************************************************************
@@ -63,19 +64,27 @@ header tcp_t {
 
 header kvsQuery_t {
     bit<8> protocol;
-    bit<2> queryType;
-    bit<1> isNull;
-    bit<5> padding;
     bit<32> key;
-    bit<32> value;
     bit<32> key2;
+    bit<32> value;
+    bit<32> value2;
+    bit<32> value3;
+    bit<32> value4;
+    bit<32> value5;
+    bit<1> isNull;
+    bit<1> isNull2;
+    bit<1> isNull3;
+    bit<1> isNull4;
+    bit<1> isNull5;
+    bit<2> queryType;
+    bit<1> padding;
 }
 
 header headerStack_t {
     bit<32> state;
-    bit<32> next_type; // this is used to indicate the next header type
+    bit<1> isNull;
+    bit<7> padding;
 }
-
 
 struct metadata {
     bit<16> ecmp_select;
@@ -84,7 +93,7 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
-    headerStack_t[10]     headerStack;
+    headerStack_t[5]     headerStack;
     tcp_t        tcp;
     kvsQuery_t   kvsQuery;
 }
@@ -119,20 +128,18 @@ parser MyParser(packet_in packet,
         }
     }
 
-    state parse_headerStack {
-        packet.extract(hdr.headerStack.next);  
-         transition select(hdr.headerStack.last.next_type) {
-            1: parse_tcp; // last header in the header stack
-            0: parse_headerStack; // parse the next header
-        }
-    }
-
     state parse_kvsQuery{
         packet.extract(hdr.kvsQuery);
         transition select (hdr.kvsQuery.protocol) {
             TYPE_TCP: parse_tcp;
+            TYPE_HEADERSTACK: parse_headerStack;
             default: accept;
         }
+    }
+
+    state parse_headerStack {
+        packet.extract(hdr.headerStack.next); 
+        transition accept; 
     }
 
     state parse_tcp{
@@ -184,11 +191,10 @@ control MyIngress(inout headers hdr,
     }
 
     action rangeGet() {
-        database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
         hdr.headerStack.push_front(1);
 		hdr.headerStack[0].setValid();
-		hdr.headerStack[0].state = hdr.kvsQuery.value;
-        isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
+		database.read(hdr.headerStack[0].state, hdr.kvsQuery.key);
+        isFilled.read(hdr.headerStack[0].isNull, hdr.kvsQuery.key);
     }
     
     table Forwarding {
@@ -229,7 +235,25 @@ control MyIngress(inout headers hdr,
             		hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
             		// clone(CloneType.I2E, 1);
             		recirculate(meta);
-            	}
+            	} else {
+                    // hdr.kvsQuery.value = hdr.headerStack[4].state;
+                    // hdr.kvsQuery.value2 = hdr.headerStack[3].state;
+                    // hdr.kvsQuery.value3 = hdr.headerStack[2].state;
+                    // hdr.kvsQuery.value4 = hdr.headerStack[1].state;
+                    // hdr.kvsQuery.value5 = hdr.headerStack[0].state;
+                    // hdr.kvsQuery.isNull = hdr.headerStack[4].isNull;
+                    // hdr.kvsQuery.isNull2 = hdr.headerStack[3].isNull;
+                    // hdr.kvsQuery.isNull3 = hdr.headerStack[2].isNull;
+                    // hdr.kvsQuery.isNull4 = hdr.headerStack[1].isNull;
+                    // hdr.kvsQuery.isNull5 = hdr.headerStack[0].isNull;
+
+                    // hdr.headerStack.pop_front(1);
+                    // hdr.headerStack.pop_front(1);
+                    // hdr.headerStack.pop_front(1);
+                    // hdr.headerStack.pop_front(1);
+                    // hdr.headerStack.pop_front(1);
+
+                }
             }
 
             // if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
@@ -299,6 +323,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
         packet.emit(hdr.kvsQuery);
+        packet.emit(hdr.headerStack);
         packet.emit(hdr.tcp);
     }
 }

@@ -15,16 +15,25 @@ from scapy.all import BitField, ShortField, IntField, bind_layers
 QUERY_PROTOCOL = 250
 KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
+HEADERSTACK_PROTOCOL = 253
 
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
-                BitField("queryType", 0, 2),
-                BitField("isNull", 0, 1),
-                BitField("padding", 0, 5),
                 IntField("key", 0),
-                IntField("value", 0),
-                IntField("key2", 0)]
+                IntField("key2", 0),
+                IntField("value", 0),                
+                IntField("value2", 0),
+                IntField("value3", 0),
+                IntField("value4", 0),
+                IntField("value5", 0),
+                BitField("isNull", 0, 1),
+                BitField("isNull2", 0, 1),
+                BitField("isNull3", 0, 1),
+                BitField("isNull4", 0, 1),
+                BitField("isNull5", 0, 1),
+                BitField("queryType", 0, 2),
+                BitField("padding", 0, 1)]
 
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
 bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
@@ -48,15 +57,15 @@ def randStr(N=10):
 
 def splitRange(addr, iface, lower, upper):
     i = lower
-    while i < upper - 10:
+    while i < upper - 5:
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=2, key=i, key2=i+10) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=HEADERSTACK_PROTOCOL, queryType=2, key=i, key2=i+5) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
         sendp(pkt, iface=iface, verbose=False)
-        print (i, "to", i + 10)
-        i += 10
+        print (i, "to", i + 5)
+        i += 5
 
     pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=2, key=i, key2=upper) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
+    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=HEADERSTACK_PROTOCOL, queryType=2, key=i, key2=upper) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
     sendp(pkt, iface=iface, verbose=False)
     print (i, "to", upper)
 
