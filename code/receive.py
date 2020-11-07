@@ -72,7 +72,10 @@ def handle_pkt(pkt):
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:
-            print pkt[KVSQuery].value
+            if pkt[KVSQuery].isNull == 0:
+                print "NULL" # Replace with large number
+            else:
+                print pkt[KVSQuery].value
 
 
 

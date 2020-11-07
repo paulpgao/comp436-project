@@ -880,32 +880,6 @@
           }
         }
       ]
-    },
-    {
-      "name" : "act_2",
-      "id" : 11,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ipv4", "ttl"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x02"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ecmp.p4",
-            "line" : 235,
-            "column" : 16,
-            "source_fragment" : "hdr.ipv4.ttl = 2"
-          }
-        }
-      ]
     }
   ],
   "pipelines" : [
@@ -1061,35 +1035,6 @@
           "id" : 4,
           "source_info" : {
             "filename" : "ecmp.p4",
-            "line" : 235,
-            "column" : 29,
-            "source_fragment" : "="
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [11],
-          "actions" : ["act_2"],
-          "base_default_next" : "node_11",
-          "next_tables" : {
-            "act_2" : "node_11"
-          },
-          "default_entry" : {
-            "action_id" : 11,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_act_2",
-          "id" : 5,
-          "source_info" : {
-            "filename" : "ecmp.p4",
             "line" : 237,
             "column" : 37,
             "source_fragment" : "= hdr.kvsQuery.key + 1; ..."
@@ -1236,10 +1181,10 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_act_1"
+          "true_next" : "node_10"
         },
         {
-          "name" : "node_11",
+          "name" : "node_10",
           "id" : 4,
           "source_info" : {
             "filename" : "ecmp.p4",
@@ -1262,7 +1207,7 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_act_2"
+          "true_next" : "tbl_act_1"
         }
       ]
     },

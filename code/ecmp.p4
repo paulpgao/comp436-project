@@ -232,7 +232,7 @@ control MyIngress(inout headers hdr,
                 }
             } else if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
                 // Recirculated packet
-                hdr.ipv4.ttl = 2;
+                // hdr.ipv4.ttl = 2;
                 if (hdr.kvsQuery.key < hdr.kvsQuery.key2) {
                     hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
                     clone(CloneType.I2E, 1);
