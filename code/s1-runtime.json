@@ -2,6 +2,14 @@
   "target": "bmv2",
   "p4info": "build/ecmp.p4.p4info.txt",
   "bmv2_json": "build/ecmp.json",
+  "clone_session_entries": [
+    {
+        "clone_session_id": 1,
+        "replicas": [
+            {"egress_port": 1, "instance": 1}
+        ]
+    }
+  ],
   "table_entries": [
     {
       "table": "MyIngress.Ops",
@@ -32,7 +40,7 @@
       "match": {
         "hdr.kvsQuery.queryType": 2
       },
-      "action_name": "MyIngress.range",
+      "action_name": "MyIngress.rangee",
       "action_params": {
       }
     },

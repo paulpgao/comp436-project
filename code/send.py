@@ -22,8 +22,9 @@ class KVSQuery(Packet):
                 BitField("queryType", 0, 2),
                 BitField("isNull", 0, 1),
                 BitField("padding", 0, 5),
-                IntField("key",0),
-                IntField("value", 0)]
+                IntField("key", 0),
+                IntField("value", 0),
+                IntField("key2", 0)]
 
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
 bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
@@ -72,12 +73,12 @@ def main():
             exit(1)
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
         pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=1, key=int(sys.argv[2]), value=int(sys.argv[3])) / TCP(dport=1234, sport=random.randint(49152,65535)) / "put"
-    elif sys.arvg[1] == "range":
+    elif sys.argv[1] == "range":
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<key1>" "<key2>"'
             exit(1)
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=2, key=int(sys.argv[2]), value=int(sys.argv[3])) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=2, key=int(sys.argv[2]), key2=int(sys.argv[3])) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
 
         # pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
         # pkt = pkt / IP(dst=addr, proto=QUERY_PROTOCOL) / Query(protocol=TCP_PROTOCOL) / TCP(dport=1234, sport=random.randint(49152,65535)) / "query"

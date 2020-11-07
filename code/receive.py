@@ -20,8 +20,9 @@ class KVSQuery(Packet):
                 BitField("queryType", 0, 2),
                 BitField("isNull", 0, 1),
                 BitField("padding", 0, 5),
-                IntField("key",0),
-                IntField("value", 0)]
+                IntField("key", 0),
+                IntField("value", 0),
+                IntField("key2", 0)]
 
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
 bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
@@ -64,7 +65,10 @@ class IPOption_MRI(IPOption):
 def handle_pkt(pkt):
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
         if pkt[KVSQuery].queryType == 0:
-            print pkt[KVSQuery].value
+            if pkt[KVSQuery].isNull == 0:
+                print "NULL" # Replace with large number
+            else:
+                print pkt[KVSQuery].value
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:

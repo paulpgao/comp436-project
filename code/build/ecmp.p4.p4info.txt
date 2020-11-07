@@ -48,6 +48,9 @@ tables {
     id: 16829933
   }
   action_refs {
+    id: 16788177
+  }
+  action_refs {
     id: 16800567
   }
   size: 1024
@@ -95,6 +98,13 @@ actions {
     id: 16829933
     name: "MyIngress.put"
     alias: "put"
+  }
+}
+actions {
+  preamble {
+    id: 16788177
+    name: "MyIngress.rangee"
+    alias: "rangee"
   }
 }
 registers {

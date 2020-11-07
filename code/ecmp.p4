@@ -2,6 +2,14 @@
 #include <core.p4>
 #include <v1model.p4>
 
+#define PKT_INSTANCE_TYPE_NORMAL 0
+#define PKT_INSTANCE_TYPE_INGRESS_CLONE 1
+#define PKT_INSTANCE_TYPE_EGRESS_CLONE 2
+#define PKT_INSTANCE_TYPE_COALESCED 3
+#define PKT_INSTANCE_TYPE_INGRESS_RECIRC 4
+#define PKT_INSTANCE_TYPE_REPLICATION 5
+#define PKT_INSTANCE_TYPE_RESUBMIT 6
+
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> TYPE_KVSQUERY = 252;
 const bit<8> TYPE_TCP = 6;
@@ -60,6 +68,12 @@ header kvsQuery_t {
     bit<5> padding;
     bit<32> key;
     bit<32> value;
+    bit<32> key2;
+}
+
+header new_t {
+    bit<32> state;
+    bit<32> next_type; // this is used to indicate the next header type
 }
 
 
@@ -70,6 +84,7 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
+    new_t[3]     new;
     tcp_t        tcp;
     kvsQuery_t   kvsQuery;
 }
@@ -101,6 +116,14 @@ parser MyParser(packet_in packet,
             TYPE_TCP: parse_tcp;
             TYPE_KVSQUERY: parse_kvsQuery;
             default: accept;
+        }
+    }
+
+    state parse_new {
+        packet.extract(hdr.new.next);  
+         transition select(hdr.new.last.next_type) {
+            1: parse_tcp; // last header in the header stack
+            0: parse_new; // parse the next header
         }
     }
 
@@ -160,8 +183,10 @@ control MyIngress(inout headers hdr,
         isFilled.write(hdr.kvsQuery.key, 1);
     }
 
-    action range() {
-        
+    action rangee() {
+        // same as get
+        database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
+        isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
     }
     
     table Forwarding {
@@ -186,7 +211,7 @@ control MyIngress(inout headers hdr,
             drop;
             get;
             put;
-            range;
+            rangee;
             NoAction;
         }
         default_action = NoAction();
@@ -194,10 +219,25 @@ control MyIngress(inout headers hdr,
 
     apply {
     	if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
-    		//recirculate(meta);
-    		Forwarding.apply();
-    		Ops.apply();
-            hdr.kvsQuery.padding = 1;
+            // Forwarding.apply();
+            // Ops.apply();
+            // hdr.kvsQuery.padding = 1;
+            if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
+                // Normal packet
+                Forwarding.apply();
+                Ops.apply();
+                hdr.kvsQuery.padding = 1;
+                if (hdr.kvsQuery.queryType == 2) {
+                    recirculate(meta);
+                }
+            } else if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
+                // Recirculated packet
+                hdr.ipv4.ttl = 2;
+                if (hdr.kvsQuery.key < hdr.kvsQuery.key2) {
+                    hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
+                    clone(CloneType.I2E, 1);
+                }
+            }
         }
     }
 }
