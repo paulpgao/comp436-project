@@ -1,0 +1,7 @@
+{
+  "target": "bmv2",
+  "p4info": "build/ms2-0.p4.p4info.txt",
+  "bmv2_json": "build/ms2-0.json",
+  "table_entries": [
+  ]
+}
