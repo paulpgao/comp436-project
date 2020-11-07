@@ -159,6 +159,10 @@ control MyIngress(inout headers hdr,
         database.write(hdr.kvsQuery.key, hdr.kvsQuery.value);
         isFilled.write(hdr.kvsQuery.key, 1);
     }
+
+    action range() {
+        
+    }
     
     table Forwarding {
         key = {
@@ -182,6 +186,7 @@ control MyIngress(inout headers hdr,
             drop;
             get;
             put;
+            range;
             NoAction;
         }
         default_action = NoAction();

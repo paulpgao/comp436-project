@@ -67,6 +67,8 @@ def handle_pkt(pkt):
             print pkt[KVSQuery].value
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
+        elif pkt[KVSQuery].queryType == 2:
+            print pkt[KVSQuery].value
 
 
 
