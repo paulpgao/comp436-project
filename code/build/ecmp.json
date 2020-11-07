@@ -14,10 +14,7 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
-        ["clone_spec", 32, false],
         ["instance_type", 32, false],
-        ["drop", 1, false],
-        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -25,14 +22,12 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
-        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
-        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
-        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["_padding", 5, false]
+        ["priority", 3, false],
+        ["_padding", 3, false]
       ]
     },
     {
@@ -181,11 +176,16 @@
   "field_lists" : [
     {
       "id" : 1,
+      "name" : "fl",
+      "elements" : []
+    },
+    {
+      "id" : 2,
       "name" : "metadata",
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 231,
-        "column" : 32,
+        "line" : 229,
+        "column" : 26,
         "source_fragment" : "meta"
       },
       "elements" : [
@@ -194,11 +194,6 @@
           "value" : ["scalars", "metadata.ecmp_select"]
         }
       ]
-    },
-    {
-      "id" : 2,
-      "name" : "fl",
-      "elements" : []
     }
   ],
   "errors" : [
@@ -358,7 +353,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 284,
+        "line" : 295,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -377,7 +372,7 @@
         "column" : 29,
         "source_fragment" : "database"
       },
-      "size" : 1024,
+      "size" : 1025,
       "bitwidth" : 32
     },
     {
@@ -389,7 +384,7 @@
         "column" : 28,
         "source_fragment" : "isFilled"
       },
-      "size" : 1024,
+      "size" : 1025,
       "bitwidth" : 1
     }
   ],
@@ -399,7 +394,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 261,
+        "line" : 272,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -516,48 +511,6 @@
             "line" : 168,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ipv4", "ttl"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "+",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["ipv4", "ttl"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0xff"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "ecmp.p4",
-            "line" : 169,
-            "column" : 8,
-            "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
           }
         }
       ]
@@ -713,7 +666,7 @@
       ]
     },
     {
-      "name" : "MyIngress.rangee",
+      "name" : "MyIngress.rangeGet",
       "id" : 7,
       "runtime_data" : [],
       "primitives" : [
@@ -771,54 +724,6 @@
       "runtime_data" : [],
       "primitives" : [
         {
-          "op" : "recirculate",
-          "parameters" : [
-            {
-              "type" : "hexstr",
-              "value" : "0x1"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ecmp.p4",
-            "line" : 231,
-            "column" : 20,
-            "source_fragment" : "recirculate(meta)"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "act_0",
-      "id" : 9,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["kvsQuery", "padding"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x01"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ecmp.p4",
-            "line" : 229,
-            "column" : 16,
-            "source_fragment" : "hdr.kvsQuery.padding = 1"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "act_1",
-      "id" : 10,
-      "runtime_data" : [],
-      "primitives" : [
-        {
           "op" : "assign",
           "parameters" : [
             {
@@ -855,8 +760,8 @@
           ],
           "source_info" : {
             "filename" : "ecmp.p4",
-            "line" : 237,
-            "column" : 20,
+            "line" : 227,
+            "column" : 14,
             "source_fragment" : "hdr.kvsQuery.key = hdr.kvsQuery.key + 1"
           }
         },
@@ -869,14 +774,55 @@
             },
             {
               "type" : "hexstr",
+              "value" : "0x1"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 228,
+            "column" : 14,
+            "source_fragment" : "clone(CloneType.I2E, 1)"
+          }
+        },
+        {
+          "op" : "recirculate",
+          "parameters" : [
+            {
+              "type" : "hexstr",
               "value" : "0x2"
             }
           ],
           "source_info" : {
             "filename" : "ecmp.p4",
-            "line" : 238,
-            "column" : 20,
-            "source_fragment" : "clone(CloneType.I2E, 1)"
+            "line" : 229,
+            "column" : 14,
+            "source_fragment" : "recirculate(meta)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_0",
+      "id" : 9,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "padding"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ecmp.p4",
+            "line" : 224,
+            "column" : 12,
+            "source_fragment" : "hdr.kvsQuery.padding = 1"
           }
         }
       ]
@@ -956,13 +902,13 @@
           "support_timeout" : false,
           "direct_meters" : null,
           "action_ids" : [4, 5, 6, 7, 1],
-          "actions" : ["MyIngress.drop", "MyIngress.get", "MyIngress.put", "MyIngress.rangee", "NoAction"],
+          "actions" : ["MyIngress.drop", "MyIngress.get", "MyIngress.put", "MyIngress.rangeGet", "NoAction"],
           "base_default_next" : "tbl_act",
           "next_tables" : {
             "MyIngress.drop" : "tbl_act",
             "MyIngress.get" : "tbl_act",
             "MyIngress.put" : "tbl_act",
-            "MyIngress.rangee" : "tbl_act",
+            "MyIngress.rangeGet" : "tbl_act",
             "NoAction" : "tbl_act"
           },
           "default_entry" : {
@@ -977,8 +923,8 @@
           "id" : 2,
           "source_info" : {
             "filename" : "ecmp.p4",
-            "line" : 229,
-            "column" : 37,
+            "line" : 224,
+            "column" : 33,
             "source_fragment" : "="
           },
           "key" : [],
@@ -990,9 +936,9 @@
           "direct_meters" : null,
           "action_ids" : [9],
           "actions" : ["act_0"],
-          "base_default_next" : "node_7",
+          "base_default_next" : "node_6",
           "next_tables" : {
-            "act_0" : "node_7"
+            "act_0" : "node_6"
           },
           "default_entry" : {
             "action_id" : 9,
@@ -1006,9 +952,9 @@
           "id" : 3,
           "source_info" : {
             "filename" : "ecmp.p4",
-            "line" : 231,
-            "column" : 20,
-            "source_fragment" : "recirculate(meta)"
+            "line" : 227,
+            "column" : 31,
+            "source_fragment" : "= hdr.kvsQuery.key + 1; ..."
           },
           "key" : [],
           "match_type" : "exact",
@@ -1025,35 +971,6 @@
           },
           "default_entry" : {
             "action_id" : 8,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_act_1",
-          "id" : 4,
-          "source_info" : {
-            "filename" : "ecmp.p4",
-            "line" : 237,
-            "column" : 37,
-            "source_fragment" : "= hdr.kvsQuery.key + 1; ..."
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [10],
-          "actions" : ["act_1"],
-          "base_default_next" : null,
-          "next_tables" : {
-            "act_1" : null
-          },
-          "default_entry" : {
-            "action_id" : 10,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -1103,41 +1020,15 @@
             }
           },
           "false_next" : null,
-          "true_next" : "node_3"
+          "true_next" : "MyIngress.Forwarding"
         },
         {
-          "name" : "node_3",
+          "name" : "node_6",
           "id" : 1,
           "source_info" : {
             "filename" : "ecmp.p4",
             "line" : 225,
             "column" : 16,
-            "source_fragment" : "standard_metadata.instance_type == 0"
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "==",
-              "left" : {
-                "type" : "field",
-                "value" : ["standard_metadata", "instance_type"]
-              },
-              "right" : {
-                "type" : "hexstr",
-                "value" : "0x00000000"
-              }
-            }
-          },
-          "true_next" : "MyIngress.Forwarding",
-          "false_next" : "node_9"
-        },
-        {
-          "name" : "node_7",
-          "id" : 2,
-          "source_info" : {
-            "filename" : "ecmp.p4",
-            "line" : 230,
-            "column" : 20,
             "source_fragment" : "hdr.kvsQuery.queryType == 2"
           },
           "expression" : {
@@ -1155,41 +1046,15 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_act_0"
+          "true_next" : "node_7"
         },
         {
-          "name" : "node_9",
-          "id" : 3,
+          "name" : "node_7",
+          "id" : 2,
           "source_info" : {
             "filename" : "ecmp.p4",
-            "line" : 233,
-            "column" : 23,
-            "source_fragment" : "standard_metadata.instance_type == 4"
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "==",
-              "left" : {
-                "type" : "field",
-                "value" : ["standard_metadata", "instance_type"]
-              },
-              "right" : {
-                "type" : "hexstr",
-                "value" : "0x00000004"
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "node_10"
-        },
-        {
-          "name" : "node_10",
-          "id" : 4,
-          "source_info" : {
-            "filename" : "ecmp.p4",
-            "line" : 236,
-            "column" : 20,
+            "line" : 226,
+            "column" : 17,
             "source_fragment" : "hdr.kvsQuery.key < hdr.kvsQuery.key2"
           },
           "expression" : {
@@ -1207,7 +1072,7 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_act_1"
+          "true_next" : "tbl_act_0"
         }
       ]
     },
@@ -1216,7 +1081,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 249,
+        "line" : 260,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -1232,7 +1097,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ecmp.p4",
-        "line" : 261,
+        "line" : 272,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -1282,24 +1147,16 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
-      "intrinsic_metadata.lf_field_list",
-      ["standard_metadata", "lf_field_list"]
-    ],
-    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
-    ],
-    [
-      "intrinsic_metadata.resubmit_flag",
-      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.recirculate_flag",
-      ["standard_metadata", "recirculate_flag"]
+      "intrinsic_metadata.priority",
+      ["standard_metadata", "priority"]
     ]
   ],
   "program" : "ecmp.p4",

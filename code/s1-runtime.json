@@ -40,7 +40,7 @@
       "match": {
         "hdr.kvsQuery.queryType": 2
       },
-      "action_name": "MyIngress.rangee",
+      "action_name": "MyIngress.rangeGet",
       "action_params": {
       }
     },

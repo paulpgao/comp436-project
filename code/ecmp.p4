@@ -159,14 +159,14 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    register <bit<32>>(1024) database;
-    register <bit<1>>(1024) isFilled;
+    register <bit<32>>(1025) database;
+    register <bit<1>>(1025) isFilled;
 
     // Setting the egress port and IP destination.
     action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
         hdr.ipv4.dstAddr = nhop_ipv4;
         standard_metadata.egress_spec = port;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+        //hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
     action drop() {
@@ -183,7 +183,7 @@ control MyIngress(inout headers hdr,
         isFilled.write(hdr.kvsQuery.key, 1);
     }
 
-    action rangee() {
+    action rangeGet() {
         // same as get
         database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
         isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
@@ -211,7 +211,7 @@ control MyIngress(inout headers hdr,
             drop;
             get;
             put;
-            rangee;
+            rangeGet;
             NoAction;
         }
         default_action = NoAction();
@@ -219,25 +219,36 @@ control MyIngress(inout headers hdr,
 
     apply {
     	if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
-            // Forwarding.apply();
-            // Ops.apply();
-            // hdr.kvsQuery.padding = 1;
-            if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
-                // Normal packet
-                Forwarding.apply();
-                Ops.apply();
-                hdr.kvsQuery.padding = 1;
-                if (hdr.kvsQuery.queryType == 2) {
-                    recirculate(meta);
-                }
-            } else if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
-                // Recirculated packet
-                // hdr.ipv4.ttl = 2;
-                if (hdr.kvsQuery.key < hdr.kvsQuery.key2) {
-                    hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
-                    clone(CloneType.I2E, 1);
-                }
+            Forwarding.apply();
+            Ops.apply();
+            hdr.kvsQuery.padding = 1;
+            if (hdr.kvsQuery.queryType == 2) {
+            	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
+            		hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
+            		clone(CloneType.I2E, 1);
+            		recirculate(meta);  
+            	}
             }
+
+            // if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
+            //     // Normal packet
+            //     // Forwarding.apply();
+            //     // Ops.apply();
+            //     // hdr.kvsQuery.padding = 1;
+            //     if (hdr.kvsQuery.queryType == 2) {
+            //         recirculate(meta);
+            //     }
+            // } else if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
+            //     // Recirculated packet
+            //     // hdr.ipv4.ttl = 2;
+            //     Forwarding.apply();
+            //     Ops.apply();
+            //     if (hdr.kvsQuery.key < hdr.kvsQuery.key2) {
+            //         
+            //         clone(CloneType.I2E, 1);
+            //         recirculate(meta);
+            //     }
+            // }
         }
     }
 }
