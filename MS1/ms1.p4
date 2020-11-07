@@ -71,7 +71,7 @@ header kvsQuery_t {
     bit<32> key2;
 }
 
-header new_t {
+header headerStack_t {
     bit<32> state;
     bit<32> next_type; // this is used to indicate the next header type
 }
@@ -84,7 +84,7 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
-    new_t[3]     new;
+    headerStack_t[10]     headerStack;
     tcp_t        tcp;
     kvsQuery_t   kvsQuery;
 }
@@ -119,11 +119,11 @@ parser MyParser(packet_in packet,
         }
     }
 
-    state parse_new {
-        packet.extract(hdr.new.next);  
-         transition select(hdr.new.last.next_type) {
+    state parse_headerStack {
+        packet.extract(hdr.headerStack.next);  
+         transition select(hdr.headerStack.last.next_type) {
             1: parse_tcp; // last header in the header stack
-            0: parse_new; // parse the next header
+            0: parse_headerStack; // parse the next header
         }
     }
 
@@ -184,8 +184,10 @@ control MyIngress(inout headers hdr,
     }
 
     action rangeGet() {
-        // same as get
         database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
+        hdr.headerStack.push_front(1);
+		hdr.headerStack[0].setValid();
+		hdr.headerStack[0].state = hdr.kvsQuery.value;
         isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
     }
     
@@ -225,8 +227,8 @@ control MyIngress(inout headers hdr,
             if (hdr.kvsQuery.queryType == 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
             		hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
-            		clone(CloneType.I2E, 1);
-            		recirculate(meta);  
+            		// clone(CloneType.I2E, 1);
+            		recirculate(meta);
             	}
             }
 
