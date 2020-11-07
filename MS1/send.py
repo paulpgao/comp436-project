@@ -71,8 +71,8 @@ def splitRange(addr, iface, lower, upper, size = 50):
 
     pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
     pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, key=i, key2=upper, queryType=2)
-    # for j in range(i, upper - 1):
-    #      pkt = pkt / Response(nextType = 0)
+    for j in range(i, upper - 1):
+         pkt = pkt / Response(nextType = 0)
     pkt = pkt / Response(nextType = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
     sendp(pkt, iface=iface, verbose=False)
     print (i, "to", upper)
