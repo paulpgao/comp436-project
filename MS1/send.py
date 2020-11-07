@@ -15,28 +15,30 @@ from scapy.all import BitField, ShortField, IntField, bind_layers
 QUERY_PROTOCOL = 250
 KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
-HEADERSTACK_PROTOCOL = 253
+RESPONSE_PROTOCOL = 253
 
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
+                IntField("index", 0),
                 IntField("key", 0),
                 IntField("key2", 0),
                 IntField("value", 0),                
-                IntField("value2", 0),
-                IntField("value3", 0),
-                IntField("value4", 0),
-                IntField("value5", 0),
                 BitField("isNull", 0, 1),
-                BitField("isNull2", 0, 1),
-                BitField("isNull3", 0, 1),
-                BitField("isNull4", 0, 1),
-                BitField("isNull5", 0, 1),
                 BitField("queryType", 0, 2),
-                BitField("padding", 0, 1)]
+                BitField("padding", 0, 5)]
+
+class Response(Packet):
+    name = "Response"
+    fields_desc= [IntField("value", 0),
+                BitField("isNull", 0, 1),
+                BitField("nextType", 0, 1),
+                BitField("padding", 0, 6)]
 
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
-bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
+bind_layers(KVSQuery, Response, protocol = RESPONSE_PROTOCOL)
+bind_layers(Response, Response, nextType = 0)
+bind_layers(Response, TCP, nextType = 1)
 
 def get_if():
     ifs=get_if_list()
@@ -55,17 +57,23 @@ def randStr(N=10):
     return ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(N))
 
 
-def splitRange(addr, iface, lower, upper):
+def splitRange(addr, iface, lower, upper, size = 50):
     i = lower
-    while i < upper - 5:
-        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=HEADERSTACK_PROTOCOL, queryType=2, key=i, key2=i+5) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
-        sendp(pkt, iface=iface, verbose=False)
-        print (i, "to", i + 5)
-        i += 5
+    # while i < upper - 5:
+    #     pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
+    #     pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, queryType=2, index=0, key=i, key2=i+5)
+    #     for j in range(4):
+    #         pkt = pkt / Response(nextType = 0)
+    #     pkt = pkt / Response(nextType = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
+    #     sendp(pkt, iface=iface, verbose=False)
+    #     print (i, "to", i + 5)
+    #     i += 5
 
     pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=HEADERSTACK_PROTOCOL, queryType=2, key=i, key2=upper) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
+    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, key=i, key2=upper, queryType=2)
+    # for j in range(i, upper - 1):
+    #      pkt = pkt / Response(nextType = 0)
+    pkt = pkt / Response(nextType = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
     sendp(pkt, iface=iface, verbose=False)
     print (i, "to", upper)
 

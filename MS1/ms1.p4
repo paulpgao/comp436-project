@@ -13,7 +13,7 @@
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> TYPE_KVSQUERY = 252;
 const bit<8> TYPE_TCP = 6;
-const bit<8> TYPE_HEADERSTACK = 253;
+const bit<8> TYPE_RESPONSE = 253;
 
 
 /*************************************************************************
@@ -64,26 +64,20 @@ header tcp_t {
 
 header kvsQuery_t {
     bit<8> protocol;
+    bit<32> index;
     bit<32> key;
     bit<32> key2;
     bit<32> value;
-    bit<32> value2;
-    bit<32> value3;
-    bit<32> value4;
-    bit<32> value5;
     bit<1> isNull;
-    bit<1> isNull2;
-    bit<1> isNull3;
-    bit<1> isNull4;
-    bit<1> isNull5;
     bit<2> queryType;
-    bit<1> padding;
+    bit<5> padding;
 }
 
-header headerStack_t {
-    bit<32> state;
+header response_t {
+    bit<32> value;
     bit<1> isNull;
-    bit<7> padding;
+    bit<1> nextType;
+    bit<6> padding;
 }
 
 struct metadata {
@@ -93,7 +87,7 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
-    headerStack_t[5]     headerStack;
+    response_t[1025]     response;
     tcp_t        tcp;
     kvsQuery_t   kvsQuery;
 }
@@ -132,14 +126,18 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.kvsQuery);
         transition select (hdr.kvsQuery.protocol) {
             TYPE_TCP: parse_tcp;
-            TYPE_HEADERSTACK: parse_headerStack;
+            TYPE_RESPONSE: parse_response;
             default: accept;
         }
     }
 
-    state parse_headerStack {
-        packet.extract(hdr.headerStack.next); 
-        transition accept; 
+    state parse_response {
+        packet.extract(hdr.response.next); 
+        transition select(hdr.response.last.nextType) {
+            1: parse_tcp; // last header in the header stack
+            0: parse_response; // parse the next header
+            default: accept;
+        }
     }
 
     state parse_tcp{
@@ -191,10 +189,12 @@ control MyIngress(inout headers hdr,
     }
 
     action rangeGet() {
-        hdr.headerStack.push_front(1);
-		hdr.headerStack[0].setValid();
-		database.read(hdr.headerStack[0].state, hdr.kvsQuery.key);
-        isFilled.read(hdr.headerStack[0].isNull, hdr.kvsQuery.key);
+        hdr.response.push_front(1);
+        hdr.response[0].setValid();
+		database.read(hdr.response[0].value, hdr.kvsQuery.key);
+        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
+        hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
+        hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
     
     table Forwarding {
@@ -232,28 +232,9 @@ control MyIngress(inout headers hdr,
             hdr.kvsQuery.padding = 1;
             if (hdr.kvsQuery.queryType == 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
-            		hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
             		// clone(CloneType.I2E, 1);
             		recirculate(meta);
-            	} else {
-                    // hdr.kvsQuery.value = hdr.headerStack[4].state;
-                    // hdr.kvsQuery.value2 = hdr.headerStack[3].state;
-                    // hdr.kvsQuery.value3 = hdr.headerStack[2].state;
-                    // hdr.kvsQuery.value4 = hdr.headerStack[1].state;
-                    // hdr.kvsQuery.value5 = hdr.headerStack[0].state;
-                    // hdr.kvsQuery.isNull = hdr.headerStack[4].isNull;
-                    // hdr.kvsQuery.isNull2 = hdr.headerStack[3].isNull;
-                    // hdr.kvsQuery.isNull3 = hdr.headerStack[2].isNull;
-                    // hdr.kvsQuery.isNull4 = hdr.headerStack[1].isNull;
-                    // hdr.kvsQuery.isNull5 = hdr.headerStack[0].isNull;
-
-                    // hdr.headerStack.pop_front(1);
-                    // hdr.headerStack.pop_front(1);
-                    // hdr.headerStack.pop_front(1);
-                    // hdr.headerStack.pop_front(1);
-                    // hdr.headerStack.pop_front(1);
-
-                }
+            	}
             }
 
             // if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
@@ -323,7 +304,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
         packet.emit(hdr.kvsQuery);
-        packet.emit(hdr.headerStack);
+        packet.emit(hdr.response);
         packet.emit(hdr.tcp);
     }
 }
