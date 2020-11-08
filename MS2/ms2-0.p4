@@ -64,13 +64,13 @@ header tcp_t {
 
 header kvsQuery_t {
     bit<8> protocol;
-    bit<32> index;
     bit<32> key;
     bit<32> key2;
     bit<32> value;
-    bit<1> isNull;
+    bit<2> switchID;
+    bit<2> pingPong;
     bit<2> queryType;
-    bit<5> padding;
+    bit<2> padding;
 }
 
 header response_t {
@@ -164,18 +164,63 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
+    register <bit<32>>(2) requestCounts;
+    register <bit<32>>(2) pingPongCounts;
+
     apply {
         if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
             // forward traffic
             if (standard_metadata.ingress_port == 1){
+                // Issue a ping for every 10th request
+                bit<32> numRequest = 0;
+                requestCounts.read(numRequest, 0);
+                if (numRequest == 9) {
+                    hdr.kvsQuery.pingPong = 1;
+                    // Clear request count
+                    requestCounts.write(0, 0);
+                    // Update ping count
+                    bit<32> pingCount = 0;
+                    pingPongCounts.read(pingCount, 0);
+                    pingPongCounts.write(0, pingCount + 1);
+                } else {
+                    hdr.kvsQuery.pingPong = 0;
+                    // Update request count
+                    requestCounts.write(0, numRequest + 1);
+                }
+
                 if (hdr.kvsQuery.key >= 0 && hdr.kvsQuery.key <= 512){
                     standard_metadata.egress_spec = 2;
                 } else if (hdr.kvsQuery.key > 512 && hdr.kvsQuery.key <= 1024){
                     standard_metadata.egress_spec = 3;
                 }
+                if (hdr.kvsQuery.queryType == 1) {
+                    clone(CloneType.I2E, 1);
+                }
             } 
             // returning traffic
             else {
+                // Check Ping and Pong counts for every 15th request
+                bit<32> numRequest = 0;
+                requestCounts.read(numRequest, 1);
+                bit<32> pingCount = 0;
+                bit<32> pongCount = 0;
+                pingPongCounts.read(pingCount, 0);
+                pingPongCounts.read(pongCount, 1);
+                // Update pong count
+                if (hdr.kvsQuery.pingPong == 2) {
+                    pongCount = pongCount + 1;
+                    pingPongCounts.write(1, pongCount);
+                }
+                if (numRequest == 14) {
+                    if (pingCount - pongCount > 10) {
+                        // Failure bound is 10 ping/pongs difference
+                        hdr.kvsQuery.pingPong = 3;
+                    }
+                    requestCounts.write(1, 0);
+                } else {
+                    // Update request count
+                    requestCounts.write(1, numRequest + 1);
+                }
                 standard_metadata.egress_spec = 1; 
             }
         }

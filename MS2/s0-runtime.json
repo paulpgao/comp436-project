@@ -2,6 +2,14 @@
   "target": "bmv2",
   "p4info": "build/ms2-0.p4.p4info.txt",
   "bmv2_json": "build/ms2-0.json",
+  "clone_session_entries": [
+    {
+        "clone_session_id": 1,
+        "replicas": [
+            {"egress_port": 4, "instance": 1}
+        ]
+    }
+  ],
   "table_entries": [
   ]
 }

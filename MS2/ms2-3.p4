@@ -87,7 +87,7 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
-    response_t[512]     response;
+    response_t[1025]     response;
     tcp_t        tcp;
     kvsQuery_t   kvsQuery;
 }
@@ -164,8 +164,8 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    register <bit<32>>(512) database;
-    register <bit<1>>(512) isFilled;
+    register <bit<32>>(1025) database;
+    register <bit<1>>(1025) isFilled;
 
     // Setting the egress port and IP destination.
     action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
@@ -181,20 +181,20 @@ control MyIngress(inout headers hdr,
     action get() {
         // database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
         // isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
-        database.read(hdr.response[0].value, hdr.kvsQuery.key - 512);
-        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key - 512);
+        database.read(hdr.response[0].value, hdr.kvsQuery.key);
+        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
     }
 
     action put() {
-        database.write(hdr.kvsQuery.key - 512, hdr.kvsQuery.value);
-        isFilled.write(hdr.kvsQuery.key - 512, 1);
+        database.write(hdr.kvsQuery.key, hdr.kvsQuery.value);
+        isFilled.write(hdr.kvsQuery.key, 1);
     }
 
     action rangeGet() {
         hdr.response.push_front(1);
         hdr.response[0].setValid();
-		database.read(hdr.response[0].value, hdr.kvsQuery.key - 512);
-        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key - 512);
+		database.read(hdr.response[0].value, hdr.kvsQuery.key);
+        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
         // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
@@ -229,10 +229,13 @@ control MyIngress(inout headers hdr,
 
     apply {
     	if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
-            Forwarding.apply();
+            // Only if a switch has failed (bonus that we did not implement), then forward
+            if (hdr.kvsQuery.switchID == 3) {
+                Forwarding.apply();
+            }
             Ops.apply();
             hdr.kvsQuery.padding = 1;
-            hdr.kvsQuery.switchID = 2;
+            hdr.kvsQuery.switchID = 3;
             // TODO: always send pong for now
             if (hdr.kvsQuery.pingPong == 1) {
                 hdr.kvsQuery.pingPong = 2;

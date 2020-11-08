@@ -18,13 +18,13 @@ RESPONSE_PROTOCOL = 253
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
-                IntField("index", 0),
                 IntField("key", 0),
                 IntField("key2", 0),
-                IntField("value", 0),                
-                BitField("isNull", 0, 1),
+                IntField("value", 0),
+                BitField("switchID", 0, 2),                
+                BitField("pingPong", 0, 2),
                 BitField("queryType", 0, 2),
-                BitField("padding", 0, 5)]
+                BitField("padding", 0, 2)]
 
 class Response(Packet):
     name = "Response"

@@ -18,13 +18,13 @@ RESPONSE_PROTOCOL = 253
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
-                IntField("index", 0),
                 IntField("key", 0),
                 IntField("key2", 0),
-                IntField("value", 0),                
-                BitField("isNull", 0, 1),
+                IntField("value", 0),
+                BitField("switchID", 0, 2),                
+                BitField("pingPong", 0, 2),
                 BitField("queryType", 0, 2),
-                BitField("padding", 0, 5)]
+                BitField("padding", 0, 2)]
 
 class Response(Packet):
     name = "Response"
@@ -84,8 +84,11 @@ def get_packet_layers(packet):
 
 def handle_pkt(pkt):
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
+        if pkt[KVSQuery].pingPong == 2:
+            print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
+        if pkt[KVSQuery].pingPong == 3:
+            print "Pings/pongs are not within bound"
         if pkt[KVSQuery].queryType == 0:
-            #print pkt[KVSQuery].value
             if pkt[Response].isNull == 0:
                 print "NULL" # Replace with large number
             else:
@@ -93,7 +96,7 @@ def handle_pkt(pkt):
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:
-            #print pkt[KVSQuery].value
+            #print pkt[KVSQuery].switchID
             for layer in reversed(list(get_packet_layers(pkt))):
                 if layer.name == "Response" and layer.nextType == 0:
                     if layer.isNull == 0:

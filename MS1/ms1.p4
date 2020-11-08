@@ -64,13 +64,13 @@ header tcp_t {
 
 header kvsQuery_t {
     bit<8> protocol;
-    bit<32> index;
     bit<32> key;
     bit<32> key2;
     bit<32> value;
-    bit<1> isNull;
+    bit<2> switchID;
+    bit<2> pingPong;
     bit<2> queryType;
-    bit<5> padding;
+    bit<2> padding;
 }
 
 header response_t {

@@ -20,13 +20,13 @@ RESPONSE_PROTOCOL = 253
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
-                IntField("index", 0),
                 IntField("key", 0),
                 IntField("key2", 0),
-                IntField("value", 0),                
-                BitField("isNull", 0, 1),
+                IntField("value", 0),
+                BitField("switchID", 0, 2),                
+                BitField("pingPong", 0, 2),
                 BitField("queryType", 0, 2),
-                BitField("padding", 0, 5)]
+                BitField("padding", 0, 2)]
 
 class Response(Packet):
     name = "Response"
@@ -65,7 +65,7 @@ def splitRange(addr, iface, lower, upper, size = 5):
     i = lower
     while i < upper - size:
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, queryType=2, index=0, key=i, key2=i+size)
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, queryType=2, key=i, key2=i+size)
         # for j in range(4):
         #     pkt = pkt / Response(nextType = 0)
         pkt = pkt / Response(nextType = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"

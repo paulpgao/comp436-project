@@ -14,7 +14,10 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
+        ["clone_spec", 32, false],
         ["instance_type", 32, false],
+        ["drop", 1, false],
+        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -22,12 +25,14 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
+        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
+        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
+        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["priority", 3, false],
-        ["_padding", 3, false]
+        ["_padding", 5, false]
       ]
     },
     {
@@ -79,13 +84,13 @@
       "id" : 5,
       "fields" : [
         ["protocol", 8, false],
-        ["index", 32, false],
         ["key", 32, false],
         ["key2", 32, false],
         ["value", 32, false],
-        ["isNull", 1, false],
+        ["switchID", 2, false],
+        ["pingPong", 2, false],
         ["queryType", 2, false],
-        ["padding", 5, false]
+        ["padding", 2, false]
       ]
     },
     {
@@ -3752,7 +3757,7 @@
       "name" : "metadata",
       "source_info" : {
         "filename" : "ms2-1.p4",
-        "line" : 239,
+        "line" : 243,
         "column" : 26,
         "source_fragment" : "meta"
       },
@@ -3967,7 +3972,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms2-1.p4",
-        "line" : 305,
+        "line" : 309,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -4008,7 +4013,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms2-1.p4",
-        "line" : 282,
+        "line" : 286,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4414,18 +4419,22 @@
       "runtime_data" : [],
       "primitives" : [
         {
-          "op" : "recirculate",
+          "op" : "assign",
           "parameters" : [
             {
+              "type" : "field",
+              "value" : ["kvsQuery", "pingPong"]
+            },
+            {
               "type" : "hexstr",
-              "value" : "0x1"
+              "value" : "0x02"
             }
           ],
           "source_info" : {
             "filename" : "ms2-1.p4",
-            "line" : 239,
-            "column" : 14,
-            "source_fragment" : "recirculate(meta)"
+            "line" : 238,
+            "column" : 16,
+            "source_fragment" : "hdr.kvsQuery.pingPong = 2"
           }
         }
       ]
@@ -4459,18 +4468,40 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["kvsQuery", "value"]
+              "value" : ["kvsQuery", "switchID"]
             },
             {
               "type" : "hexstr",
-              "value" : "0x00000001"
+              "value" : "0x01"
             }
           ],
           "source_info" : {
             "filename" : "ms2-1.p4",
             "line" : 235,
             "column" : 12,
-            "source_fragment" : "hdr.kvsQuery.value = 1"
+            "source_fragment" : "hdr.kvsQuery.switchID = 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_1",
+      "id" : 10,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "recirculate",
+          "parameters" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x1"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms2-1.p4",
+            "line" : 243,
+            "column" : 14,
+            "source_fragment" : "recirculate(meta)"
           }
         }
       ]
@@ -4600,9 +4631,9 @@
           "id" : 3,
           "source_info" : {
             "filename" : "ms2-1.p4",
-            "line" : 239,
-            "column" : 14,
-            "source_fragment" : "recirculate(meta)"
+            "line" : 238,
+            "column" : 38,
+            "source_fragment" : "="
           },
           "key" : [],
           "match_type" : "exact",
@@ -4613,12 +4644,41 @@
           "direct_meters" : null,
           "action_ids" : [8],
           "actions" : ["act"],
-          "base_default_next" : null,
+          "base_default_next" : "node_8",
           "next_tables" : {
-            "act" : null
+            "act" : "node_8"
           },
           "default_entry" : {
             "action_id" : 8,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_1",
+          "id" : 4,
+          "source_info" : {
+            "filename" : "ms2-1.p4",
+            "line" : 243,
+            "column" : 14,
+            "source_fragment" : "recirculate(meta)"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [10],
+          "actions" : ["act_1"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "act_1" : null
+          },
+          "default_entry" : {
+            "action_id" : 10,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -4675,7 +4735,33 @@
           "id" : 1,
           "source_info" : {
             "filename" : "ms2-1.p4",
-            "line" : 236,
+            "line" : 237,
+            "column" : 16,
+            "source_fragment" : "hdr.kvsQuery.pingPong == 1"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["kvsQuery", "pingPong"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x01"
+              }
+            }
+          },
+          "true_next" : "tbl_act_0",
+          "false_next" : "node_8"
+        },
+        {
+          "name" : "node_8",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "ms2-1.p4",
+            "line" : 240,
             "column" : 16,
             "source_fragment" : "hdr.kvsQuery.queryType == 2"
           },
@@ -4694,14 +4780,14 @@
             }
           },
           "false_next" : null,
-          "true_next" : "node_7"
+          "true_next" : "node_9"
         },
         {
-          "name" : "node_7",
-          "id" : 2,
+          "name" : "node_9",
+          "id" : 3,
           "source_info" : {
             "filename" : "ms2-1.p4",
-            "line" : 237,
+            "line" : 241,
             "column" : 17,
             "source_fragment" : "hdr.kvsQuery.key < hdr.kvsQuery.key2"
           },
@@ -4720,7 +4806,7 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_act_0"
+          "true_next" : "tbl_act_1"
         }
       ]
     },
@@ -4729,7 +4815,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms2-1.p4",
-        "line" : 270,
+        "line" : 274,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -4745,7 +4831,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms2-1.p4",
-        "line" : 282,
+        "line" : 286,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4795,16 +4881,24 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
+      "intrinsic_metadata.lf_field_list",
+      ["standard_metadata", "lf_field_list"]
+    ],
+    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.resubmit_flag",
+      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.priority",
-      ["standard_metadata", "priority"]
+      "intrinsic_metadata.recirculate_flag",
+      ["standard_metadata", "recirculate_flag"]
     ]
   ],
   "program" : "ms2-1.p4",
