@@ -72,20 +72,34 @@ class IPOption_MRI(IPOption):
 #                 count += 1
 #     return count
 
+def get_packet_layers(packet):
+    counter = 0
+    while True:
+        layer = packet.getlayer(counter)
+        if layer is None:
+            break
+
+        yield layer
+        counter += 1
 
 def handle_pkt(pkt):
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
         if pkt[KVSQuery].queryType == 0:
-            if pkt[KVSQuery].isNull == 0:
+            if pkt[Response].isNull == 0:
                 print "NULL" # Replace with large number
             else:
-                print pkt[KVSQuery].value
+                print pkt[Response].value
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:
-            pkt.show2()
-            print pkt.summary()
-        print "------------------------"
+            for layer in reversed(list(get_packet_layers(pkt))):
+                if layer.name == "Response" and layer.nextType == 0:
+                    if layer.isNull == 0:
+                        print "NULL"
+                    else:
+                        print layer.value
+            #print pkt.summary()
+        #print "------------------------"
 
 
 

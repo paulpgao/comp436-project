@@ -7336,7 +7336,7 @@
       "name" : "metadata",
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 236,
+        "line" : 238,
         "column" : 26,
         "source_fragment" : "meta"
       },
@@ -7551,7 +7551,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 302,
+        "line" : 304,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -7592,7 +7592,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 279,
+        "line" : 281,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -7767,7 +7767,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["kvsQuery", "value"]
+              "value" : ["response[0]", "value"]
             },
             {
               "type" : "register_array",
@@ -7780,9 +7780,9 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 182,
+            "line" : 184,
             "column" : 8,
-            "source_fragment" : "database.read(hdr.kvsQuery.value, hdr.kvsQuery.key)"
+            "source_fragment" : "database.read(hdr.response[0].value, hdr.kvsQuery.key)"
           }
         },
         {
@@ -7790,7 +7790,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["kvsQuery", "isNull"]
+              "value" : ["response[0]", "isNull"]
             },
             {
               "type" : "register_array",
@@ -7803,9 +7803,9 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 183,
+            "line" : 185,
             "column" : 8,
-            "source_fragment" : "isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key)"
+            "source_fragment" : "isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key)"
           }
         }
       ]
@@ -7833,7 +7833,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 187,
+            "line" : 189,
             "column" : 8,
             "source_fragment" : "database.write(hdr.kvsQuery.key, hdr.kvsQuery.value)"
           }
@@ -7856,7 +7856,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 188,
+            "line" : 190,
             "column" : 8,
             "source_fragment" : "isFilled.write(hdr.kvsQuery.key, 1)"
           }
@@ -7882,7 +7882,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 192,
+            "line" : 194,
             "column" : 8,
             "source_fragment" : "hdr.response.push_front(1)"
           }
@@ -7897,7 +7897,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 193,
+            "line" : 195,
             "column" : 8,
             "source_fragment" : "hdr.response[0].setValid()"
           }
@@ -7920,7 +7920,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 194,
+            "line" : 196,
             "column" : 2,
             "source_fragment" : "database.read(hdr.response[0].value, hdr.kvsQuery.key)"
           }
@@ -7943,7 +7943,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 195,
+            "line" : 197,
             "column" : 8,
             "source_fragment" : "isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key)"
           }
@@ -7985,51 +7985,9 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 196,
+            "line" : 198,
             "column" : 8,
             "source_fragment" : "hdr.kvsQuery.key = hdr.kvsQuery.key + 1"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["kvsQuery", "index"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "+",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["kvsQuery", "index"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x00000001"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xffffffff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms1.p4",
-            "line" : 197,
-            "column" : 8,
-            "source_fragment" : "hdr.kvsQuery.index = hdr.kvsQuery.index + 1"
           }
         }
       ]
@@ -8049,7 +8007,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 236,
+            "line" : 238,
             "column" : 14,
             "source_fragment" : "recirculate(meta)"
           }
@@ -8075,7 +8033,7 @@
           ],
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 232,
+            "line" : 234,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.padding = 1"
           }
@@ -8100,7 +8058,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 200,
+            "line" : 202,
             "column" : 10,
             "source_fragment" : "Forwarding"
           },
@@ -8138,7 +8096,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 214,
+            "line" : 216,
             "column" : 10,
             "source_fragment" : "Ops"
           },
@@ -8178,7 +8136,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 232,
+            "line" : 234,
             "column" : 33,
             "source_fragment" : "="
           },
@@ -8207,7 +8165,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 236,
+            "line" : 238,
             "column" : 14,
             "source_fragment" : "recirculate(meta)"
           },
@@ -8239,7 +8197,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 229,
+            "line" : 231,
             "column" : 9,
             "source_fragment" : "hdr.ipv4.isValid() && hdr.ipv4.ttl > 0"
           },
@@ -8282,7 +8240,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 233,
+            "line" : 235,
             "column" : 16,
             "source_fragment" : "hdr.kvsQuery.queryType == 2"
           },
@@ -8308,7 +8266,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "ms1.p4",
-            "line" : 234,
+            "line" : 236,
             "column" : 17,
             "source_fragment" : "hdr.kvsQuery.key < hdr.kvsQuery.key2"
           },
@@ -8336,7 +8294,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 267,
+        "line" : 269,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -8352,7 +8310,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms1.p4",
-        "line" : 279,
+        "line" : 281,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },

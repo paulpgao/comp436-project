@@ -179,8 +179,10 @@ control MyIngress(inout headers hdr,
     }
 
     action get() {
-        database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
-        isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
+        // database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
+        // isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
+        database.read(hdr.response[0].value, hdr.kvsQuery.key);
+        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
     }
 
     action put() {
@@ -194,7 +196,7 @@ control MyIngress(inout headers hdr,
 		database.read(hdr.response[0].value, hdr.kvsQuery.key);
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
-        hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
+        // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
     
     table Forwarding {
