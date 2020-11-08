@@ -13,19 +13,30 @@ from scapy.all import BitField, ShortField, IntField, bind_layers
 QUERY_PROTOCOL = 250
 KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
+RESPONSE_PROTOCOL = 253
 
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
-                BitField("queryType", 0, 2),
-                BitField("isNull", 0, 1),
-                BitField("padding", 0, 5),
+                IntField("index", 0),
                 IntField("key", 0),
-                IntField("value", 0),
-                IntField("key2", 0)]
+                IntField("key2", 0),
+                IntField("value", 0),                
+                BitField("isNull", 0, 1),
+                BitField("queryType", 0, 2),
+                BitField("padding", 0, 5)]
+
+class Response(Packet):
+    name = "Response"
+    fields_desc= [IntField("value", 0),
+                BitField("isNull", 0, 1),
+                BitField("nextType", 0, 1),
+                BitField("padding", 0, 6)]
 
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
-bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
+bind_layers(KVSQuery, Response, protocol = RESPONSE_PROTOCOL)
+bind_layers(Response, Response, nextType = 0)
+bind_layers(Response, TCP, nextType = 1)
 
 def get_if():
     ifs=get_if_list()
@@ -61,21 +72,37 @@ class IPOption_MRI(IPOption):
 #                 count += 1
 #     return count
 
+def get_packet_layers(packet):
+    counter = 0
+    while True:
+        layer = packet.getlayer(counter)
+        if layer is None:
+            break
+
+        yield layer
+        counter += 1
 
 def handle_pkt(pkt):
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
         if pkt[KVSQuery].queryType == 0:
-            if pkt[KVSQuery].isNull == 0:
+            #print pkt[KVSQuery].value
+            if pkt[Response].isNull == 0:
                 print "NULL" # Replace with large number
             else:
-                print pkt[KVSQuery].value
+                print pkt[Response].value
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:
-            if pkt[KVSQuery].isNull == 0:
-                print "NULL" # Replace with large number
-            else:
-                print pkt[KVSQuery].value
+            #print pkt[KVSQuery].value
+            for layer in reversed(list(get_packet_layers(pkt))):
+                if layer.name == "Response" and layer.nextType == 0:
+                    if layer.isNull == 0:
+                        print "NULL"
+                    else:
+                        print layer.value
+            #print pkt.summary()
+        #print "------------------------"
+
 
 
 

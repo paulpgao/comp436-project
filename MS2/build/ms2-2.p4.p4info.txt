@@ -120,7 +120,7 @@ registers {
       }
     }
   }
-  size: 1025
+  size: 512
 }
 registers {
   preamble {
@@ -135,7 +135,7 @@ registers {
       }
     }
   }
-  size: 1025
+  size: 512
 }
 type_info {
 }

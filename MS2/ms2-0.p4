@@ -13,6 +13,7 @@
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> TYPE_KVSQUERY = 252;
 const bit<8> TYPE_TCP = 6;
+const bit<8> TYPE_RESPONSE = 253;
 
 
 /*************************************************************************
@@ -63,19 +64,21 @@ header tcp_t {
 
 header kvsQuery_t {
     bit<8> protocol;
-    bit<2> queryType;
-    bit<1> isNull;
-    bit<5> padding;
+    bit<32> index;
     bit<32> key;
-    bit<32> value;
     bit<32> key2;
+    bit<32> value;
+    bit<1> isNull;
+    bit<2> queryType;
+    bit<5> padding;
 }
 
-header new_t {
-    bit<32> state;
-    bit<32> next_type; // this is used to indicate the next header type
+header response_t {
+    bit<32> value;
+    bit<1> isNull;
+    bit<1> nextType;
+    bit<6> padding;
 }
-
 
 struct metadata {
     bit<16> ecmp_select;
@@ -84,7 +87,7 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
-    new_t[3]     new;
+    response_t[1025]     response;
     tcp_t        tcp;
     kvsQuery_t   kvsQuery;
 }
@@ -119,18 +122,20 @@ parser MyParser(packet_in packet,
         }
     }
 
-    state parse_new {
-        packet.extract(hdr.new.next);  
-         transition select(hdr.new.last.next_type) {
-            1: parse_tcp; // last header in the header stack
-            0: parse_new; // parse the next header
-        }
-    }
-
     state parse_kvsQuery{
         packet.extract(hdr.kvsQuery);
         transition select (hdr.kvsQuery.protocol) {
             TYPE_TCP: parse_tcp;
+            TYPE_RESPONSE: parse_response;
+            default: accept;
+        }
+    }
+
+    state parse_response {
+        packet.extract(hdr.response.next); 
+        transition select(hdr.response.last.nextType) {
+            1: parse_tcp; // last header in the header stack
+            0: parse_response; // parse the next header
             default: accept;
         }
     }
@@ -160,20 +165,17 @@ control MyIngress(inout headers hdr,
                   inout standard_metadata_t standard_metadata) {
 
     apply {
-    	if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
+        if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
             // forward traffic
             if (standard_metadata.ingress_port == 1){
                 if (hdr.kvsQuery.key >= 0 && hdr.kvsQuery.key <= 512){
-                    hdr.ipv4.dstAddr = 10.0.1.1;
                     standard_metadata.egress_spec = 2;
                 } else if (hdr.kvsQuery.key > 512 && hdr.kvsQuery.key <= 1024){
-                    hdr.ipv4.dstAddr = 10.0.1.1;
                     standard_metadata.egress_spec = 3;
                 }
             } 
             // returning traffic
             else {
-                hdr.ipv4.dstAddr = 10.0.1.1;
                 standard_metadata.egress_spec = 1; 
             }
         }
@@ -224,6 +226,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
         packet.emit(hdr.kvsQuery);
+        packet.emit(hdr.response);
         packet.emit(hdr.tcp);
     }
 }
