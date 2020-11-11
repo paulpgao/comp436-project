@@ -182,6 +182,9 @@ control MyIngress(inout headers hdr,
                     bit<32> pingCount = 0;
                     pingPongCounts.read(pingCount, 0);
                     pingPongCounts.write(0, pingCount + 1);
+                    // Send ping to both backend switches
+                    clone(CloneType.I2E, 2);
+                    hdr.kvsQuery.pingPong = 0;
                 } else {
                     hdr.kvsQuery.pingPong = 0;
                     // Update request count
@@ -193,6 +196,7 @@ control MyIngress(inout headers hdr,
                 } else if (hdr.kvsQuery.key > 512 && hdr.kvsQuery.key <= 1024){
                     standard_metadata.egress_spec = 3;
                 }
+                // Put requests also get sent to standby switch
                 if (hdr.kvsQuery.queryType == 1) {
                     clone(CloneType.I2E, 1);
                 }
