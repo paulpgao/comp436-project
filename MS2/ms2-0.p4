@@ -188,6 +188,7 @@ control MyIngress(inout headers hdr,
                     clone(CloneType.I2E, 2);
                     hdr.kvsQuery.pingPong = 0;
                 } else {
+                    // Put requests also get sent to standby switch
                     if (hdr.kvsQuery.queryType == 1) {
                         clone(CloneType.I2E, 1);
                     }
@@ -201,7 +202,6 @@ control MyIngress(inout headers hdr,
                 } else if (hdr.kvsQuery.key > 512 && hdr.kvsQuery.key <= 1024){
                     standard_metadata.egress_spec = 3;
                 }
-                // Put requests also get sent to standby switch
             } 
             // returning traffic
             else {

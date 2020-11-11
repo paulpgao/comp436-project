@@ -14,7 +14,10 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
+        ["clone_spec", 32, false],
         ["instance_type", 32, false],
+        ["drop", 1, false],
+        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -22,12 +25,14 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
+        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
+        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
+        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["priority", 3, false],
-        ["_padding", 3, false]
+        ["_padding", 5, false]
       ]
     },
     {
@@ -4870,16 +4875,24 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
+      "intrinsic_metadata.lf_field_list",
+      ["standard_metadata", "lf_field_list"]
+    ],
+    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.resubmit_flag",
+      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.priority",
-      ["standard_metadata", "priority"]
+      "intrinsic_metadata.recirculate_flag",
+      ["standard_metadata", "recirculate_flag"]
     ]
   ],
   "program" : "ms2-1.p4",
