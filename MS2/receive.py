@@ -82,12 +82,24 @@ def get_packet_layers(packet):
         yield layer
         counter += 1
 
+count = 0
 def handle_pkt(pkt):
+    global count
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
+        count += 1
+        # print count
+        # print pkt[KVSQuery].pingPong
+        # print pkt[KVSQuery].switchID
+
         if pkt[KVSQuery].pingPong == 2:
             print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
+            print "------------------------"
+            return
         if pkt[KVSQuery].pingPong == 3:
-            print "Pings/pongs are not within bound"
+            print "Pings/pongs are not within bound. Failure: Switch " + str(pkt[KVSQuery].switchID)
+            print "------------------------"
+            return
+
         if pkt[KVSQuery].queryType == 0:
             if pkt[Response].isNull == 0:
                 print "NULL" # Replace with large number
@@ -104,7 +116,7 @@ def handle_pkt(pkt):
                     else:
                         print layer.value
             #print pkt.summary()
-        #print "------------------------"
+        print "------------------------"
 
 
 

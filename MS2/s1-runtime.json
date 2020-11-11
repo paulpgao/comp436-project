@@ -20,7 +20,8 @@
     {
       "table": "MyIngress.Ops",
       "match": {
-        "hdr.kvsQuery.queryType": 0
+        "hdr.kvsQuery.queryType": 0,
+        "hdr.kvsQuery.pingPong": 0
       },
       "action_name": "MyIngress.get",
       "action_params": {
@@ -29,7 +30,8 @@
     {
       "table": "MyIngress.Ops",
       "match": {
-        "hdr.kvsQuery.queryType": 1
+        "hdr.kvsQuery.queryType": 1,
+        "hdr.kvsQuery.pingPong": 0
       },
       "action_name": "MyIngress.put",
       "action_params": {
@@ -38,7 +40,8 @@
     {
       "table": "MyIngress.Ops",
       "match": {
-        "hdr.kvsQuery.queryType": 2
+        "hdr.kvsQuery.queryType": 2,
+        "hdr.kvsQuery.pingPong": 0
       },
       "action_name": "MyIngress.rangeGet",
       "action_params": {
@@ -53,6 +56,15 @@
       "action_params": {
         "nhop_ipv4": "10.0.1.1",
         "port" : 1
+      }
+    },
+    {
+      "table": "MyIngress.Pong",
+      "match": {
+        "hdr.kvsQuery.pingPong": 1
+      },
+      "action_name": "MyIngress.setPong",
+      "action_params": {
       }
     }
   ]

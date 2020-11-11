@@ -68,7 +68,7 @@ header kvsQuery_t {
     bit<32> key2;
     bit<32> value;
     bit<2> switchID;
-    bit<2> pingPong;
+    bit<2> pingPong; //0: normal packet, 1: ping packet, 2: pong packet, 3: failure indicator
     bit<2> queryType;
     bit<2> padding;
 }
@@ -164,8 +164,9 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    register <bit<32>>(2) requestCounts;
-    register <bit<32>>(2) pingPongCounts;
+    register <bit<32>>(2) requestCounts; // 0: number of requests (if 10), 1: number of requests (if 15)
+    register <bit<32>>(2) pingPongCounts1;// Switch 1, 0: count of pings, 1: count of pongs
+    register <bit<32>>(2) pingPongCounts2;// Switch 2, 0: count of pings, 1: count of pongs
 
     apply {
         if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
@@ -175,48 +176,62 @@ control MyIngress(inout headers hdr,
                 bit<32> numRequest = 0;
                 requestCounts.read(numRequest, 0);
                 if (numRequest == 9) {
-                    hdr.kvsQuery.pingPong = 1;
                     // Clear request count
                     requestCounts.write(0, 0);
                     // Update ping count
                     bit<32> pingCount = 0;
-                    pingPongCounts.read(pingCount, 0);
-                    pingPongCounts.write(0, pingCount + 1);
+                    pingPongCounts1.read(pingCount, 0);
+                    pingPongCounts1.write(0, pingCount + 1);
+                    pingPongCounts2.read(pingCount, 0);
+                    pingPongCounts2.write(0, pingCount + 1);
                     // Send ping to both backend switches
                     clone(CloneType.I2E, 2);
                     hdr.kvsQuery.pingPong = 0;
                 } else {
+                    if (hdr.kvsQuery.queryType == 1) {
+                        clone(CloneType.I2E, 1);
+                    }
                     hdr.kvsQuery.pingPong = 0;
                     // Update request count
                     requestCounts.write(0, numRequest + 1);
                 }
-
+                // load balancing
                 if (hdr.kvsQuery.key >= 0 && hdr.kvsQuery.key <= 512){
                     standard_metadata.egress_spec = 2;
                 } else if (hdr.kvsQuery.key > 512 && hdr.kvsQuery.key <= 1024){
                     standard_metadata.egress_spec = 3;
                 }
                 // Put requests also get sent to standby switch
-                if (hdr.kvsQuery.queryType == 1) {
-                    clone(CloneType.I2E, 1);
-                }
             } 
             // returning traffic
             else {
                 // Check Ping and Pong counts for every 15th request
                 bit<32> numRequest = 0;
                 requestCounts.read(numRequest, 1);
-                bit<32> pingCount = 0;
-                bit<32> pongCount = 0;
-                pingPongCounts.read(pingCount, 0);
-                pingPongCounts.read(pongCount, 1);
+                bit<32> pingCount1 = 0;
+                bit<32> pongCount1 = 0;
+                bit<32> pingCount2 = 0;
+                bit<32> pongCount2 = 0;
+                pingPongCounts1.read(pingCount1, 0);
+                pingPongCounts1.read(pongCount1, 1);
+                pingPongCounts2.read(pingCount2, 0);
+                pingPongCounts2.read(pongCount2, 1);
                 // Update pong count
                 if (hdr.kvsQuery.pingPong == 2) {
-                    pongCount = pongCount + 1;
-                    pingPongCounts.write(1, pongCount);
+                    if (hdr.kvsQuery.switchID == 1){
+                        pongCount1 = pongCount1 + 1;
+                        pingPongCounts1.write(1, pongCount1); 
+                    } else if (hdr.kvsQuery.switchID == 2) {
+                        pongCount2 = pongCount2 + 1;
+                        pingPongCounts2.write(1, pongCount2); 
+                    }
                 }
                 if (numRequest == 14) {
-                    if (pingCount - pongCount > 10) {
+                    if (pingCount1 - pongCount1 > 10) {
+                        // Failure bound is 10 ping/pongs difference
+                        hdr.kvsQuery.pingPong = 3;
+                    }
+                    if (pingCount2 - pongCount2 > 10) {
                         // Failure bound is 10 ping/pongs difference
                         hdr.kvsQuery.pingPong = 3;
                     }
@@ -238,7 +253,11 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply {  }
+    apply {  
+        if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_CLONE) {
+            hdr.kvsQuery.pingPong = 1;
+        }
+    }
 }
 
 /*************************************************************************

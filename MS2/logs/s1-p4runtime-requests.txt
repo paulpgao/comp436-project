@@ -1,10 +1,10 @@
 
-[2020-11-08 08:06:37.850] /p4.v1.P4Runtime/SetForwardingPipelineConfig
+[2020-11-11 05:01:53.736] /p4.v1.P4Runtime/SetForwardingPipelineConfig
 ---
-Message too long (137901 bytes)! Skipping log...
+Message too long (138047 bytes)! Skipping log...
 ---
 
-[2020-11-08 08:06:37.871] /p4.v1.P4Runtime/Write
+[2020-11-11 05:01:53.775] /p4.v1.P4Runtime/Write
 ---
 device_id: 1
 election_id {
@@ -26,7 +26,7 @@ updates {
 }
 ---
 
-[2020-11-08 08:06:37.874] /p4.v1.P4Runtime/Write
+[2020-11-11 05:01:53.780] /p4.v1.P4Runtime/Write
 ---
 device_id: 1
 election_id {
@@ -43,6 +43,12 @@ updates {
           value: "\000"
         }
       }
+      match {
+        field_id: 2
+        exact {
+          value: "\000"
+        }
+      }
       action {
         action {
           action_id: 16810522
@@ -53,7 +59,7 @@ updates {
 }
 ---
 
-[2020-11-08 08:06:37.878] /p4.v1.P4Runtime/Write
+[2020-11-11 05:01:53.783] /p4.v1.P4Runtime/Write
 ---
 device_id: 1
 election_id {
@@ -70,6 +76,12 @@ updates {
           value: "\001"
         }
       }
+      match {
+        field_id: 2
+        exact {
+          value: "\000"
+        }
+      }
       action {
         action {
           action_id: 16829933
@@ -80,7 +92,7 @@ updates {
 }
 ---
 
-[2020-11-08 08:06:37.879] /p4.v1.P4Runtime/Write
+[2020-11-11 05:01:53.786] /p4.v1.P4Runtime/Write
 ---
 device_id: 1
 election_id {
@@ -97,6 +109,12 @@ updates {
           value: "\002"
         }
       }
+      match {
+        field_id: 2
+        exact {
+          value: "\000"
+        }
+      }
       action {
         action {
           action_id: 16813393
@@ -107,7 +125,7 @@ updates {
 }
 ---
 
-[2020-11-08 08:06:37.881] /p4.v1.P4Runtime/Write
+[2020-11-11 05:01:53.789] /p4.v1.P4Runtime/Write
 ---
 device_id: 1
 election_id {
@@ -143,7 +161,34 @@ updates {
 }
 ---
 
-[2020-11-08 08:06:37.882] /p4.v1.P4Runtime/Write
+[2020-11-11 05:01:53.793] /p4.v1.P4Runtime/Write
+---
+device_id: 1
+election_id {
+  low: 1
+}
+updates {
+  type: INSERT
+  entity {
+    table_entry {
+      table_id: 33605580
+      match {
+        field_id: 1
+        exact {
+          value: "\001"
+        }
+      }
+      action {
+        action {
+          action_id: 16842025
+        }
+      }
+    }
+  }
+}
+---
+
+[2020-11-11 05:01:53.799] /p4.v1.P4Runtime/Write
 ---
 device_id: 1
 election_id {

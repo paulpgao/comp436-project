@@ -18,9 +18,24 @@ registers {
 }
 registers {
   preamble {
-    id: 369110674
-    name: "MyIngress.pingPongCounts"
-    alias: "pingPongCounts"
+    id: 369128674
+    name: "MyIngress.pingPongCounts1"
+    alias: "pingPongCounts1"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 2
+}
+registers {
+  preamble {
+    id: 369154366
+    name: "MyIngress.pingPongCounts2"
+    alias: "pingPongCounts2"
   }
   type_spec {
     bitstring {
