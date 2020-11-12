@@ -41,7 +41,6 @@ bind_layers(Response, IP, nextType = 1)
 bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
 bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
 
-
 def get_if():
     ifs=get_if_list()
     iface=None # "h1-eth0"
@@ -107,7 +106,7 @@ def main():
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)
         pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=0, key=int(sys.argv[2])) / TCP(dport=1234, sport=random.randint(49152,65535)) / "get"
-        pkt.show2()
+        # pkt.show2()
         sendp(pkt, iface=iface, verbose=False)       
     elif sys.argv[1] == "put":
         if len(sys.argv) < 4:

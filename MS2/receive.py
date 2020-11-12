@@ -6,14 +6,14 @@ import os
 from scapy.all import sniff, sendp, hexdump, get_if_list, get_if_hwaddr
 from scapy.all import Packet, IPOption
 from scapy.all import ShortField, IntField, LongField, BitField, FieldListField, FieldLenField
-from scapy.all import IP, TCP, UDP, Raw
+from scapy.all import IP, TCP, UDP, Ether, Raw
 from scapy.layers.inet import _IPOption_HDR
 from scapy.all import BitField, ShortField, IntField, bind_layers
 
 QUERY_PROTOCOL = 250
 KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
-RESPONSE_PROTOCOL = 253
+RESPONSE_PROTOCOL = 0x1234
 
 class KVSQuery(Packet):
     name = "KVSQuery"
@@ -33,10 +33,11 @@ class Response(Packet):
                 BitField("nextType", 0, 1),
                 BitField("padding", 0, 6)]
 
-bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
-bind_layers(KVSQuery, Response, protocol = RESPONSE_PROTOCOL)
+bind_layers(Ether, Response, type=RESPONSE_PROTOCOL)
 bind_layers(Response, Response, nextType = 0)
-bind_layers(Response, TCP, nextType = 1)
+bind_layers(Response, IP, nextType = 1)
+bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
+bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
 
 def get_if():
     ifs=get_if_list()
@@ -82,11 +83,12 @@ def get_packet_layers(packet):
         yield layer
         counter += 1
 
-count = 0
+# count = 0
 def handle_pkt(pkt):
     global count
+    #pkt.show2()
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
-        count += 1
+        # count += 1
         # print count
         # print pkt[KVSQuery].pingPong
         # print pkt[KVSQuery].switchID
