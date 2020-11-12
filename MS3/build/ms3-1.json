@@ -14,10 +14,7 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
-        ["clone_spec", 32, false],
         ["instance_type", 32, false],
-        ["drop", 1, false],
-        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -25,14 +22,12 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
-        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
-        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
-        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["_padding", 5, false]
+        ["priority", 3, false],
+        ["_padding", 3, false]
       ]
     },
     {
@@ -87,10 +82,12 @@
         ["key", 32, false],
         ["key2", 32, false],
         ["value", 32, false],
+        ["clientID", 32, false],
         ["switchID", 2, false],
         ["pingPong", 2, false],
         ["queryType", 2, false],
-        ["padding", 2, false]
+        ["padding", 2, false],
+        ["readWriteAccess", 8, false]
       ]
     },
     {
@@ -3757,7 +3754,7 @@
       "name" : "metadata",
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 257,
+        "line" : 255,
         "column" : 26,
         "source_fragment" : "meta"
       },
@@ -3802,9 +3799,9 @@
           "transitions" : [
             {
               "type" : "hexstr",
-              "value" : "0x0800",
+              "value" : "0x1234",
               "mask" : null,
-              "next_state" : "parse_ipv4"
+              "next_state" : "parse_response"
             },
             {
               "value" : "default",
@@ -3820,8 +3817,48 @@
           ]
         },
         {
-          "name" : "parse_ipv4",
+          "name" : "parse_response",
           "id" : 1,
+          "parser_ops" : [
+            {
+              "parameters" : [
+                {
+                  "type" : "stack",
+                  "value" : "response"
+                }
+              ],
+              "op" : "extract"
+            }
+          ],
+          "transitions" : [
+            {
+              "type" : "hexstr",
+              "value" : "0x01",
+              "mask" : null,
+              "next_state" : "parse_ipv4"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00",
+              "mask" : null,
+              "next_state" : "parse_response"
+            },
+            {
+              "value" : "default",
+              "mask" : null,
+              "next_state" : null
+            }
+          ],
+          "transition_key" : [
+            {
+              "type" : "stack_field",
+              "value" : ["response", "nextType"]
+            }
+          ]
+        },
+        {
+          "name" : "parse_ipv4",
+          "id" : 2,
           "parser_ops" : [
             {
               "parameters" : [
@@ -3861,7 +3898,7 @@
         },
         {
           "name" : "parse_kvsQuery",
-          "id" : 2,
+          "id" : 3,
           "parser_ops" : [
             {
               "parameters" : [
@@ -3881,12 +3918,6 @@
               "next_state" : "parse_tcp"
             },
             {
-              "type" : "hexstr",
-              "value" : "0xfd",
-              "mask" : null,
-              "next_state" : "parse_response"
-            },
-            {
               "value" : "default",
               "mask" : null,
               "next_state" : null
@@ -3896,46 +3927,6 @@
             {
               "type" : "field",
               "value" : ["kvsQuery", "protocol"]
-            }
-          ]
-        },
-        {
-          "name" : "parse_response",
-          "id" : 3,
-          "parser_ops" : [
-            {
-              "parameters" : [
-                {
-                  "type" : "stack",
-                  "value" : "response"
-                }
-              ],
-              "op" : "extract"
-            }
-          ],
-          "transitions" : [
-            {
-              "type" : "hexstr",
-              "value" : "0x01",
-              "mask" : null,
-              "next_state" : "parse_tcp"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00",
-              "mask" : null,
-              "next_state" : "parse_response"
-            },
-            {
-              "value" : "default",
-              "mask" : null,
-              "next_state" : null
-            }
-          ],
-          "transition_key" : [
-            {
-              "type" : "stack_field",
-              "value" : ["response", "nextType"]
             }
           ]
         },
@@ -3972,11 +3963,11 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 324,
+        "line" : 321,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
-      "order" : ["ethernet", "ipv4", "kvsQuery", "response[0]", "response[1]", "response[2]", "response[3]", "response[4]", "response[5]", "response[6]", "response[7]", "response[8]", "response[9]", "response[10]", "response[11]", "response[12]", "response[13]", "response[14]", "response[15]", "response[16]", "response[17]", "response[18]", "response[19]", "response[20]", "response[21]", "response[22]", "response[23]", "response[24]", "response[25]", "response[26]", "response[27]", "response[28]", "response[29]", "response[30]", "response[31]", "response[32]", "response[33]", "response[34]", "response[35]", "response[36]", "response[37]", "response[38]", "response[39]", "response[40]", "response[41]", "response[42]", "response[43]", "response[44]", "response[45]", "response[46]", "response[47]", "response[48]", "response[49]", "response[50]", "response[51]", "response[52]", "response[53]", "response[54]", "response[55]", "response[56]", "response[57]", "response[58]", "response[59]", "response[60]", "response[61]", "response[62]", "response[63]", "response[64]", "response[65]", "response[66]", "response[67]", "response[68]", "response[69]", "response[70]", "response[71]", "response[72]", "response[73]", "response[74]", "response[75]", "response[76]", "response[77]", "response[78]", "response[79]", "response[80]", "response[81]", "response[82]", "response[83]", "response[84]", "response[85]", "response[86]", "response[87]", "response[88]", "response[89]", "response[90]", "response[91]", "response[92]", "response[93]", "response[94]", "response[95]", "response[96]", "response[97]", "response[98]", "response[99]", "response[100]", "response[101]", "response[102]", "response[103]", "response[104]", "response[105]", "response[106]", "response[107]", "response[108]", "response[109]", "response[110]", "response[111]", "response[112]", "response[113]", "response[114]", "response[115]", "response[116]", "response[117]", "response[118]", "response[119]", "response[120]", "response[121]", "response[122]", "response[123]", "response[124]", "response[125]", "response[126]", "response[127]", "response[128]", "response[129]", "response[130]", "response[131]", "response[132]", "response[133]", "response[134]", "response[135]", "response[136]", "response[137]", "response[138]", "response[139]", "response[140]", "response[141]", "response[142]", "response[143]", "response[144]", "response[145]", "response[146]", "response[147]", "response[148]", "response[149]", "response[150]", "response[151]", "response[152]", "response[153]", "response[154]", "response[155]", "response[156]", "response[157]", "response[158]", "response[159]", "response[160]", "response[161]", "response[162]", "response[163]", "response[164]", "response[165]", "response[166]", "response[167]", "response[168]", "response[169]", "response[170]", "response[171]", "response[172]", "response[173]", "response[174]", "response[175]", "response[176]", "response[177]", "response[178]", "response[179]", "response[180]", "response[181]", "response[182]", "response[183]", "response[184]", "response[185]", "response[186]", "response[187]", "response[188]", "response[189]", "response[190]", "response[191]", "response[192]", "response[193]", "response[194]", "response[195]", "response[196]", "response[197]", "response[198]", "response[199]", "response[200]", "response[201]", "response[202]", "response[203]", "response[204]", "response[205]", "response[206]", "response[207]", "response[208]", "response[209]", "response[210]", "response[211]", "response[212]", "response[213]", "response[214]", "response[215]", "response[216]", "response[217]", "response[218]", "response[219]", "response[220]", "response[221]", "response[222]", "response[223]", "response[224]", "response[225]", "response[226]", "response[227]", "response[228]", "response[229]", "response[230]", "response[231]", "response[232]", "response[233]", "response[234]", "response[235]", "response[236]", "response[237]", "response[238]", "response[239]", "response[240]", "response[241]", "response[242]", "response[243]", "response[244]", "response[245]", "response[246]", "response[247]", "response[248]", "response[249]", "response[250]", "response[251]", "response[252]", "response[253]", "response[254]", "response[255]", "response[256]", "response[257]", "response[258]", "response[259]", "response[260]", "response[261]", "response[262]", "response[263]", "response[264]", "response[265]", "response[266]", "response[267]", "response[268]", "response[269]", "response[270]", "response[271]", "response[272]", "response[273]", "response[274]", "response[275]", "response[276]", "response[277]", "response[278]", "response[279]", "response[280]", "response[281]", "response[282]", "response[283]", "response[284]", "response[285]", "response[286]", "response[287]", "response[288]", "response[289]", "response[290]", "response[291]", "response[292]", "response[293]", "response[294]", "response[295]", "response[296]", "response[297]", "response[298]", "response[299]", "response[300]", "response[301]", "response[302]", "response[303]", "response[304]", "response[305]", "response[306]", "response[307]", "response[308]", "response[309]", "response[310]", "response[311]", "response[312]", "response[313]", "response[314]", "response[315]", "response[316]", "response[317]", "response[318]", "response[319]", "response[320]", "response[321]", "response[322]", "response[323]", "response[324]", "response[325]", "response[326]", "response[327]", "response[328]", "response[329]", "response[330]", "response[331]", "response[332]", "response[333]", "response[334]", "response[335]", "response[336]", "response[337]", "response[338]", "response[339]", "response[340]", "response[341]", "response[342]", "response[343]", "response[344]", "response[345]", "response[346]", "response[347]", "response[348]", "response[349]", "response[350]", "response[351]", "response[352]", "response[353]", "response[354]", "response[355]", "response[356]", "response[357]", "response[358]", "response[359]", "response[360]", "response[361]", "response[362]", "response[363]", "response[364]", "response[365]", "response[366]", "response[367]", "response[368]", "response[369]", "response[370]", "response[371]", "response[372]", "response[373]", "response[374]", "response[375]", "response[376]", "response[377]", "response[378]", "response[379]", "response[380]", "response[381]", "response[382]", "response[383]", "response[384]", "response[385]", "response[386]", "response[387]", "response[388]", "response[389]", "response[390]", "response[391]", "response[392]", "response[393]", "response[394]", "response[395]", "response[396]", "response[397]", "response[398]", "response[399]", "response[400]", "response[401]", "response[402]", "response[403]", "response[404]", "response[405]", "response[406]", "response[407]", "response[408]", "response[409]", "response[410]", "response[411]", "response[412]", "response[413]", "response[414]", "response[415]", "response[416]", "response[417]", "response[418]", "response[419]", "response[420]", "response[421]", "response[422]", "response[423]", "response[424]", "response[425]", "response[426]", "response[427]", "response[428]", "response[429]", "response[430]", "response[431]", "response[432]", "response[433]", "response[434]", "response[435]", "response[436]", "response[437]", "response[438]", "response[439]", "response[440]", "response[441]", "response[442]", "response[443]", "response[444]", "response[445]", "response[446]", "response[447]", "response[448]", "response[449]", "response[450]", "response[451]", "response[452]", "response[453]", "response[454]", "response[455]", "response[456]", "response[457]", "response[458]", "response[459]", "response[460]", "response[461]", "response[462]", "response[463]", "response[464]", "response[465]", "response[466]", "response[467]", "response[468]", "response[469]", "response[470]", "response[471]", "response[472]", "response[473]", "response[474]", "response[475]", "response[476]", "response[477]", "response[478]", "response[479]", "response[480]", "response[481]", "response[482]", "response[483]", "response[484]", "response[485]", "response[486]", "response[487]", "response[488]", "response[489]", "response[490]", "response[491]", "response[492]", "response[493]", "response[494]", "response[495]", "response[496]", "response[497]", "response[498]", "response[499]", "response[500]", "response[501]", "response[502]", "response[503]", "response[504]", "response[505]", "response[506]", "response[507]", "response[508]", "response[509]", "response[510]", "response[511]", "response[512]", "tcp"]
+      "order" : ["ethernet", "response[0]", "response[1]", "response[2]", "response[3]", "response[4]", "response[5]", "response[6]", "response[7]", "response[8]", "response[9]", "response[10]", "response[11]", "response[12]", "response[13]", "response[14]", "response[15]", "response[16]", "response[17]", "response[18]", "response[19]", "response[20]", "response[21]", "response[22]", "response[23]", "response[24]", "response[25]", "response[26]", "response[27]", "response[28]", "response[29]", "response[30]", "response[31]", "response[32]", "response[33]", "response[34]", "response[35]", "response[36]", "response[37]", "response[38]", "response[39]", "response[40]", "response[41]", "response[42]", "response[43]", "response[44]", "response[45]", "response[46]", "response[47]", "response[48]", "response[49]", "response[50]", "response[51]", "response[52]", "response[53]", "response[54]", "response[55]", "response[56]", "response[57]", "response[58]", "response[59]", "response[60]", "response[61]", "response[62]", "response[63]", "response[64]", "response[65]", "response[66]", "response[67]", "response[68]", "response[69]", "response[70]", "response[71]", "response[72]", "response[73]", "response[74]", "response[75]", "response[76]", "response[77]", "response[78]", "response[79]", "response[80]", "response[81]", "response[82]", "response[83]", "response[84]", "response[85]", "response[86]", "response[87]", "response[88]", "response[89]", "response[90]", "response[91]", "response[92]", "response[93]", "response[94]", "response[95]", "response[96]", "response[97]", "response[98]", "response[99]", "response[100]", "response[101]", "response[102]", "response[103]", "response[104]", "response[105]", "response[106]", "response[107]", "response[108]", "response[109]", "response[110]", "response[111]", "response[112]", "response[113]", "response[114]", "response[115]", "response[116]", "response[117]", "response[118]", "response[119]", "response[120]", "response[121]", "response[122]", "response[123]", "response[124]", "response[125]", "response[126]", "response[127]", "response[128]", "response[129]", "response[130]", "response[131]", "response[132]", "response[133]", "response[134]", "response[135]", "response[136]", "response[137]", "response[138]", "response[139]", "response[140]", "response[141]", "response[142]", "response[143]", "response[144]", "response[145]", "response[146]", "response[147]", "response[148]", "response[149]", "response[150]", "response[151]", "response[152]", "response[153]", "response[154]", "response[155]", "response[156]", "response[157]", "response[158]", "response[159]", "response[160]", "response[161]", "response[162]", "response[163]", "response[164]", "response[165]", "response[166]", "response[167]", "response[168]", "response[169]", "response[170]", "response[171]", "response[172]", "response[173]", "response[174]", "response[175]", "response[176]", "response[177]", "response[178]", "response[179]", "response[180]", "response[181]", "response[182]", "response[183]", "response[184]", "response[185]", "response[186]", "response[187]", "response[188]", "response[189]", "response[190]", "response[191]", "response[192]", "response[193]", "response[194]", "response[195]", "response[196]", "response[197]", "response[198]", "response[199]", "response[200]", "response[201]", "response[202]", "response[203]", "response[204]", "response[205]", "response[206]", "response[207]", "response[208]", "response[209]", "response[210]", "response[211]", "response[212]", "response[213]", "response[214]", "response[215]", "response[216]", "response[217]", "response[218]", "response[219]", "response[220]", "response[221]", "response[222]", "response[223]", "response[224]", "response[225]", "response[226]", "response[227]", "response[228]", "response[229]", "response[230]", "response[231]", "response[232]", "response[233]", "response[234]", "response[235]", "response[236]", "response[237]", "response[238]", "response[239]", "response[240]", "response[241]", "response[242]", "response[243]", "response[244]", "response[245]", "response[246]", "response[247]", "response[248]", "response[249]", "response[250]", "response[251]", "response[252]", "response[253]", "response[254]", "response[255]", "response[256]", "response[257]", "response[258]", "response[259]", "response[260]", "response[261]", "response[262]", "response[263]", "response[264]", "response[265]", "response[266]", "response[267]", "response[268]", "response[269]", "response[270]", "response[271]", "response[272]", "response[273]", "response[274]", "response[275]", "response[276]", "response[277]", "response[278]", "response[279]", "response[280]", "response[281]", "response[282]", "response[283]", "response[284]", "response[285]", "response[286]", "response[287]", "response[288]", "response[289]", "response[290]", "response[291]", "response[292]", "response[293]", "response[294]", "response[295]", "response[296]", "response[297]", "response[298]", "response[299]", "response[300]", "response[301]", "response[302]", "response[303]", "response[304]", "response[305]", "response[306]", "response[307]", "response[308]", "response[309]", "response[310]", "response[311]", "response[312]", "response[313]", "response[314]", "response[315]", "response[316]", "response[317]", "response[318]", "response[319]", "response[320]", "response[321]", "response[322]", "response[323]", "response[324]", "response[325]", "response[326]", "response[327]", "response[328]", "response[329]", "response[330]", "response[331]", "response[332]", "response[333]", "response[334]", "response[335]", "response[336]", "response[337]", "response[338]", "response[339]", "response[340]", "response[341]", "response[342]", "response[343]", "response[344]", "response[345]", "response[346]", "response[347]", "response[348]", "response[349]", "response[350]", "response[351]", "response[352]", "response[353]", "response[354]", "response[355]", "response[356]", "response[357]", "response[358]", "response[359]", "response[360]", "response[361]", "response[362]", "response[363]", "response[364]", "response[365]", "response[366]", "response[367]", "response[368]", "response[369]", "response[370]", "response[371]", "response[372]", "response[373]", "response[374]", "response[375]", "response[376]", "response[377]", "response[378]", "response[379]", "response[380]", "response[381]", "response[382]", "response[383]", "response[384]", "response[385]", "response[386]", "response[387]", "response[388]", "response[389]", "response[390]", "response[391]", "response[392]", "response[393]", "response[394]", "response[395]", "response[396]", "response[397]", "response[398]", "response[399]", "response[400]", "response[401]", "response[402]", "response[403]", "response[404]", "response[405]", "response[406]", "response[407]", "response[408]", "response[409]", "response[410]", "response[411]", "response[412]", "response[413]", "response[414]", "response[415]", "response[416]", "response[417]", "response[418]", "response[419]", "response[420]", "response[421]", "response[422]", "response[423]", "response[424]", "response[425]", "response[426]", "response[427]", "response[428]", "response[429]", "response[430]", "response[431]", "response[432]", "response[433]", "response[434]", "response[435]", "response[436]", "response[437]", "response[438]", "response[439]", "response[440]", "response[441]", "response[442]", "response[443]", "response[444]", "response[445]", "response[446]", "response[447]", "response[448]", "response[449]", "response[450]", "response[451]", "response[452]", "response[453]", "response[454]", "response[455]", "response[456]", "response[457]", "response[458]", "response[459]", "response[460]", "response[461]", "response[462]", "response[463]", "response[464]", "response[465]", "response[466]", "response[467]", "response[468]", "response[469]", "response[470]", "response[471]", "response[472]", "response[473]", "response[474]", "response[475]", "response[476]", "response[477]", "response[478]", "response[479]", "response[480]", "response[481]", "response[482]", "response[483]", "response[484]", "response[485]", "response[486]", "response[487]", "response[488]", "response[489]", "response[490]", "response[491]", "response[492]", "response[493]", "response[494]", "response[495]", "response[496]", "response[497]", "response[498]", "response[499]", "response[500]", "response[501]", "response[502]", "response[503]", "response[504]", "response[505]", "response[506]", "response[507]", "response[508]", "response[509]", "response[510]", "response[511]", "response[512]", "ipv4", "kvsQuery", "tcp"]
     }
   ],
   "meter_arrays" : [],
@@ -3987,7 +3978,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 167,
+        "line" : 168,
         "column" : 28,
         "source_fragment" : "database"
       },
@@ -3999,7 +3990,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 168,
+        "line" : 169,
         "column" : 27,
         "source_fragment" : "isFilled"
       },
@@ -4013,7 +4004,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 301,
+        "line" : 298,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4114,7 +4105,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 172,
+            "line" : 173,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.dstAddr = nhop_ipv4"
           }
@@ -4133,7 +4124,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 173,
+            "line" : 174,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -4155,7 +4146,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 178,
+            "line" : 179,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4177,7 +4168,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 178,
+            "line" : 179,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4207,7 +4198,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 184,
+            "line" : 185,
             "column" : 8,
             "source_fragment" : "database.read(hdr.response[0].value, hdr.kvsQuery.key)"
           }
@@ -4230,7 +4221,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 185,
+            "line" : 186,
             "column" : 8,
             "source_fragment" : "isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key)"
           }
@@ -4260,7 +4251,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 189,
+            "line" : 190,
             "column" : 8,
             "source_fragment" : "database.write(hdr.kvsQuery.key, hdr.kvsQuery.value)"
           }
@@ -4283,7 +4274,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 190,
+            "line" : 191,
             "column" : 8,
             "source_fragment" : "isFilled.write(hdr.kvsQuery.key, 1)"
           }
@@ -4309,7 +4300,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 194,
+            "line" : 195,
             "column" : 8,
             "source_fragment" : "hdr.response.push_front(1)"
           }
@@ -4324,7 +4315,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 195,
+            "line" : 196,
             "column" : 8,
             "source_fragment" : "hdr.response[0].setValid()"
           }
@@ -4347,7 +4338,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 196,
+            "line" : 197,
             "column" : 2,
             "source_fragment" : "database.read(hdr.response[0].value, hdr.kvsQuery.key)"
           }
@@ -4370,7 +4361,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 197,
+            "line" : 198,
             "column" : 8,
             "source_fragment" : "isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key)"
           }
@@ -4412,7 +4403,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 198,
+            "line" : 199,
             "column" : 8,
             "source_fragment" : "hdr.kvsQuery.key = hdr.kvsQuery.key + 1"
           }
@@ -4438,7 +4429,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 203,
+            "line" : 204,
             "column" : 8,
             "source_fragment" : "hdr.kvsQuery.pingPong = 2"
           }
@@ -4464,7 +4455,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 247,
+            "line" : 249,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.padding = 1"
           }
@@ -4483,7 +4474,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 248,
+            "line" : 250,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.switchID = 1"
           }
@@ -4505,7 +4496,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 257,
+            "line" : 255,
             "column" : 14,
             "source_fragment" : "recirculate(meta)"
           }
@@ -4519,18 +4510,56 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 163,
+        "line" : 164,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
       "init_table" : "node_2",
       "tables" : [
         {
-          "name" : "MyIngress.Ops",
+          "name" : "MyIngress.Forwarding",
           "id" : 0,
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 220,
+            "line" : 207,
+            "column" : 10,
+            "source_fragment" : "Forwarding"
+          },
+          "key" : [
+            {
+              "match_type" : "lpm",
+              "name" : "hdr.ipv4.dstAddr",
+              "target" : ["ipv4", "dstAddr"],
+              "mask" : null
+            }
+          ],
+          "match_type" : "lpm",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [4, 3, 0],
+          "actions" : ["MyIngress.drop", "MyIngress.set_nhop", "NoAction"],
+          "base_default_next" : "MyIngress.Ops",
+          "next_tables" : {
+            "MyIngress.drop" : "MyIngress.Ops",
+            "MyIngress.set_nhop" : "MyIngress.Ops",
+            "NoAction" : "MyIngress.Ops"
+          },
+          "default_entry" : {
+            "action_id" : 0,
+            "action_const" : false,
+            "action_data" : [],
+            "action_entry_const" : false
+          }
+        },
+        {
+          "name" : "MyIngress.Ops",
+          "id" : 1,
+          "source_info" : {
+            "filename" : "ms3-1.p4",
+            "line" : 221,
             "column" : 10,
             "source_fragment" : "Ops"
           },
@@ -4573,10 +4602,10 @@
         },
         {
           "name" : "tbl_act",
-          "id" : 1,
+          "id" : 2,
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 247,
+            "line" : 249,
             "column" : 33,
             "source_fragment" : "= 1; ..."
           },
@@ -4602,10 +4631,10 @@
         },
         {
           "name" : "MyIngress.Pong",
-          "id" : 2,
+          "id" : 3,
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 235,
+            "line" : 236,
             "column" : 10,
             "source_fragment" : "Pong"
           },
@@ -4625,10 +4654,10 @@
           "direct_meters" : null,
           "action_ids" : [9, 2],
           "actions" : ["MyIngress.setPong", "NoAction"],
-          "base_default_next" : "node_6",
+          "base_default_next" : "node_7",
           "next_tables" : {
-            "MyIngress.setPong" : "node_6",
-            "NoAction" : "node_6"
+            "MyIngress.setPong" : "node_7",
+            "NoAction" : "node_7"
           },
           "default_entry" : {
             "action_id" : 2,
@@ -4639,10 +4668,10 @@
         },
         {
           "name" : "tbl_act_0",
-          "id" : 3,
+          "id" : 4,
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 257,
+            "line" : 255,
             "column" : 14,
             "source_fragment" : "recirculate(meta)"
           },
@@ -4655,53 +4684,15 @@
           "direct_meters" : null,
           "action_ids" : [11],
           "actions" : ["act_0"],
-          "base_default_next" : "MyIngress.Forwarding",
+          "base_default_next" : null,
           "next_tables" : {
-            "act_0" : "MyIngress.Forwarding"
+            "act_0" : null
           },
           "default_entry" : {
             "action_id" : 11,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "MyIngress.Forwarding",
-          "id" : 4,
-          "source_info" : {
-            "filename" : "ms3-1.p4",
-            "line" : 206,
-            "column" : 10,
-            "source_fragment" : "Forwarding"
-          },
-          "key" : [
-            {
-              "match_type" : "lpm",
-              "name" : "hdr.ipv4.dstAddr",
-              "target" : ["ipv4", "dstAddr"],
-              "mask" : null
-            }
-          ],
-          "match_type" : "lpm",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [4, 3, 0],
-          "actions" : ["MyIngress.drop", "MyIngress.set_nhop", "NoAction"],
-          "base_default_next" : null,
-          "next_tables" : {
-            "MyIngress.drop" : null,
-            "MyIngress.set_nhop" : null,
-            "NoAction" : null
-          },
-          "default_entry" : {
-            "action_id" : 0,
-            "action_const" : false,
-            "action_data" : [],
-            "action_entry_const" : false
           }
         }
       ],
@@ -4712,50 +4703,30 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 245,
+            "line" : 246,
             "column" : 9,
-            "source_fragment" : "hdr.ipv4.isValid() && hdr.ipv4.ttl > 0"
+            "source_fragment" : "hdr.response[0].isValid()"
           },
           "expression" : {
             "type" : "expression",
             "value" : {
-              "op" : "and",
-              "left" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "d2b",
-                  "left" : null,
-                  "right" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "$valid$"]
-                  }
-                }
-              },
+              "op" : "d2b",
+              "left" : null,
               "right" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : ">",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["ipv4", "ttl"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x00"
-                  }
-                }
+                "type" : "field",
+                "value" : ["response[0]", "$valid$"]
               }
             }
           },
           "false_next" : null,
-          "true_next" : "MyIngress.Ops"
+          "true_next" : "MyIngress.Forwarding"
         },
         {
-          "name" : "node_6",
+          "name" : "node_7",
           "id" : 1,
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 254,
+            "line" : 252,
             "column" : 16,
             "source_fragment" : "hdr.kvsQuery.queryType == 2"
           },
@@ -4773,15 +4744,15 @@
               }
             }
           },
-          "true_next" : "node_7",
-          "false_next" : "MyIngress.Forwarding"
+          "false_next" : null,
+          "true_next" : "node_8"
         },
         {
-          "name" : "node_7",
+          "name" : "node_8",
           "id" : 2,
           "source_info" : {
             "filename" : "ms3-1.p4",
-            "line" : 255,
+            "line" : 253,
             "column" : 17,
             "source_fragment" : "hdr.kvsQuery.key < hdr.kvsQuery.key2"
           },
@@ -4799,8 +4770,8 @@
               }
             }
           },
-          "true_next" : "tbl_act_0",
-          "false_next" : "MyIngress.Forwarding"
+          "false_next" : null,
+          "true_next" : "tbl_act_0"
         }
       ]
     },
@@ -4809,7 +4780,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 289,
+        "line" : 286,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -4825,7 +4796,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-1.p4",
-        "line" : 301,
+        "line" : 298,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4875,24 +4846,16 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
-      "intrinsic_metadata.lf_field_list",
-      ["standard_metadata", "lf_field_list"]
-    ],
-    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
-    ],
-    [
-      "intrinsic_metadata.resubmit_flag",
-      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.recirculate_flag",
-      ["standard_metadata", "recirculate_flag"]
+      "intrinsic_metadata.priority",
+      ["standard_metadata", "priority"]
     ]
   ],
   "program" : "ms3-1.p4",

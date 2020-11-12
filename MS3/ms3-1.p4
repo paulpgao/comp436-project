@@ -13,7 +13,7 @@
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> TYPE_KVSQUERY = 252;
 const bit<8> TYPE_TCP = 6;
-const bit<8> TYPE_RESPONSE = 253;
+const bit<16> TYPE_RESPONSE = 0x1234;
 
 
 /*************************************************************************
@@ -67,10 +67,12 @@ header kvsQuery_t {
     bit<32> key;
     bit<32> key2;
     bit<32> value;
+    bit<32> clientID;
     bit<2> switchID;
-    bit<2> pingPong;
+    bit<2> pingPong; //0: normal packet, 1: ping packet, 2: pong packet, 3: failure indicator
     bit<2> queryType;
     bit<2> padding;
+    bit<8> readWriteAccess; // 0: all access, 1: no read access, 2: no write access
 }
 
 header response_t {
@@ -106,16 +108,25 @@ parser MyParser(packet_in packet,
     }
 
     state parse_ether{
-    	packet.extract(hdr.ethernet);
-    	transition select (hdr.ethernet.etherType){
-    		TYPE_IPV4: parse_ipv4;
-    		default: accept;
-    	}
+        packet.extract(hdr.ethernet);
+        transition select (hdr.ethernet.etherType){
+            TYPE_RESPONSE: parse_response;
+            default: accept;
+        }
+    }
+
+    state parse_response {
+        packet.extract(hdr.response.next); 
+        transition select(hdr.response.last.nextType) {
+            1: parse_ipv4; // last header in the header stack
+            0: parse_response; // parse the next header
+            default: accept;
+        }
     }
 
     state parse_ipv4{
-    	packet.extract(hdr.ipv4);
-    	transition select (hdr.ipv4.protocol) {
+        packet.extract(hdr.ipv4);
+        transition select (hdr.ipv4.protocol) {
             TYPE_TCP: parse_tcp;
             TYPE_KVSQUERY: parse_kvsQuery;
             default: accept;
@@ -126,16 +137,6 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.kvsQuery);
         transition select (hdr.kvsQuery.protocol) {
             TYPE_TCP: parse_tcp;
-            TYPE_RESPONSE: parse_response;
-            default: accept;
-        }
-    }
-
-    state parse_response {
-        packet.extract(hdr.response.next); 
-        transition select(hdr.response.last.nextType) {
-            1: parse_tcp; // last header in the header stack
-            0: parse_response; // parse the next header
             default: accept;
         }
     }
@@ -242,22 +243,18 @@ control MyIngress(inout headers hdr,
     }
 
     apply {
-    	if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 0) {
+    	if (hdr.response[0].isValid()) {
+            Forwarding.apply();
             Ops.apply();
             hdr.kvsQuery.padding = 1;
             hdr.kvsQuery.switchID = 1;
             Pong.apply();
-            // TODO: always send pong for now
-            // if (hdr.kvsQuery.pingPong == 1) {
-            //     hdr.kvsQuery.pingPong = 2;
-            // }
             if (hdr.kvsQuery.queryType == 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
             		// clone(CloneType.I2E, 1);
             		recirculate(meta);
             	}
             }
-            Forwarding.apply();
 
             // if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
             //     // Normal packet
@@ -324,9 +321,9 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
+        packet.emit(hdr.response);
         packet.emit(hdr.ipv4);
         packet.emit(hdr.kvsQuery);
-        packet.emit(hdr.response);
         packet.emit(hdr.tcp);
     }
 }

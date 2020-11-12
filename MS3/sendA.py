@@ -9,13 +9,13 @@ import time
 
 from scapy.all import sendp, send, get_if_list, get_if_hwaddr
 from scapy.all import Packet
-from scapy.all import Ether, IP, UDP, TCP
+from scapy.all import Ether, IP, UDP, TCP, Raw
 from scapy.all import BitField, ShortField, IntField, bind_layers
 
 QUERY_PROTOCOL = 250
 KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
-RESPONSE_PROTOCOL = 253
+RESPONSE_PROTOCOL = 0x1234
 
 class KVSQuery(Packet):
     name = "KVSQuery"
@@ -37,10 +37,11 @@ class Response(Packet):
                 BitField("nextType", 0, 1),
                 BitField("padding", 0, 6)]
 
-bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
-bind_layers(KVSQuery, Response, protocol = RESPONSE_PROTOCOL)
+bind_layers(Ether, Response, type=RESPONSE_PROTOCOL)
 bind_layers(Response, Response, nextType = 0)
-bind_layers(Response, TCP, nextType = 1)
+bind_layers(Response, IP, nextType = 1)
+bind_layers(IP, KVSQuery, proto = KVSQUERY_PROTOCOL)
+bind_layers(KVSQuery, TCP, protocol = TCP_PROTOCOL)
 
 def get_if():
     ifs=get_if_list()
@@ -59,27 +60,29 @@ def randStr(N=10):
     return ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(N))
 
 
-def splitRange(addr, iface, lower, upper, size = 5):
+def splitRange(addr, iface, lower, upper, size = 10):
     if upper > 1025 or lower > 1025 or upper < 0 or lower < 0 or lower > upper:
         print 'invalid value'
         exit(1)
 
     i = lower
     while i < upper - size:
-        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, queryType=2, key=i, key2=i+size, clientID = 0)
+        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
+        pkt = pkt / Response(nextType = 1)
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=2, key=i, key2=i+size, clientID = 0)
         # for j in range(4):
         #     pkt = pkt / Response(nextType = 0)
-        pkt = pkt / Response(nextType = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
+        pkt = pkt / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
         sendp(pkt, iface=iface, verbose=False)
         print (i, "to", i + size)
         i += size
 
-    pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, key=i, key2=upper, queryType=2, clientID = 0)
+    pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
+    pkt = pkt / Response(nextType = 1)
+    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, key=i, key2=upper, queryType=2, clientID = 0)
     # for j in range(i, upper - 1):
     #      pkt = pkt / Response(nextType = 0)
-    pkt = pkt / Response(nextType = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
+    pkt = pkt / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
     sendp(pkt, iface=iface, verbose=False)
     print (i, "to", upper)
 
@@ -99,14 +102,16 @@ def main():
         if len(sys.argv) < 3:
             print 'pass 1 more argument:"<key>"'
             exit(1)
-        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=RESPONSE_PROTOCOL, queryType=0, key=int(sys.argv[2]), clientID = 0) / Response(nextType = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "get"
+        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
+        pkt = pkt / Response(nextType = 1)
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=0, key=int(sys.argv[2]), clientID = 0) / TCP(dport=1234, sport=random.randint(49152,65535)) / "get"
         sendp(pkt, iface=iface, verbose=False)       
     elif sys.argv[1] == "put":
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<key>" "<value>"'
             exit(1)
-        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
+        pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
+        pkt = pkt / Response(nextType = 1)
         pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=1, key=int(sys.argv[2]), value=int(sys.argv[3]), clientID = 0) / TCP(dport=1234, sport=random.randint(49152,65535)) / "put"
         sendp(pkt, iface=iface, verbose=False)   
     elif sys.argv[1] == "range":
