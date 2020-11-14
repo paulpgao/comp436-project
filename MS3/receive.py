@@ -21,12 +21,14 @@ class KVSQuery(Packet):
                 IntField("key", 0),
                 IntField("key2", 0),
                 IntField("value", 0),
+                IntField("upperBound", 0),
                 IntField("clientID", 0),
                 BitField("switchID", 0, 2),                
                 BitField("pingPong", 0, 2),
                 BitField("queryType", 0, 2),
                 BitField("padding", 0, 2),
-                BitField("readWriteAccess", 0, 8)]
+                BitField("readWriteAccess", 0, 7),
+                BitField("rateLimitReached", 0, 1)]
 
 class Response(Packet):
     name = "Response"
@@ -91,11 +93,18 @@ def handle_pkt(pkt):
         # print pkt[KVSQuery].switchID
         # print pkt[KVSQuery].key
         # print pkt[KVSQuery].key2
+        if pkt[KVSQuery].rateLimitReached == 1:
+            print "Error: Rate limit has been reached for Client " + str(pkt[KVSQuery].clientID)
+            return
+
         if pkt[KVSQuery].readWriteAccess == 1:
-            print "Client " + str(pkt[KVSQuery].clientID) + " has no read access at key " + str(pkt[KVSQuery].key)
+            if pkt[KVSQuery].queryType == 2 and pkt[KVSQuery].key2 == pkt[KVSQuery].upperBound:
+                print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access in the full given range"
+            elif pkt[KVSQuery].queryType != 2:
+                print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access at key " + str(pkt[KVSQuery].key)
             return
         if pkt[KVSQuery].readWriteAccess == 2:
-            print "Client " + str(pkt[KVSQuery].clientID) + " has no write access at key " + str(pkt[KVSQuery].key)
+            print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no write access at key " + str(pkt[KVSQuery].key)
             return
 
         if pkt[KVSQuery].pingPong == 2:

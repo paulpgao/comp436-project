@@ -224,8 +224,7 @@ control MyIngress(inout headers hdr,
                         pongCount2 = pongCount2 + 1;
                         pingPongCounts2.write(1, pongCount2); 
                     }
-                }
-                if (numRequest == 14) {
+                } else if (numRequest == 14) {
                     if (pingCount1 - pongCount1 > 10) {
                         // Failure bound is 10 ping/pongs difference
                         hdr.kvsQuery.pingPong = 3;

@@ -8,6 +8,10 @@
         ["tmp_0", 32, false],
         ["tmp_1", 32, false],
         ["tmp_2", 32, false],
+        ["tmp_3", 32, false],
+        ["tmp_4", 32, false],
+        ["numAliceRequests_0", 32, false],
+        ["numBobRequests_0", 32, false],
         ["numRequest_0", 32, false],
         ["pingCount_0", 32, false],
         ["numRequest_1", 32, false],
@@ -25,7 +29,10 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
+        ["clone_spec", 32, false],
         ["instance_type", 32, false],
+        ["drop", 1, false],
+        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -33,12 +40,14 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
+        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
+        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
+        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["priority", 3, false],
-        ["_padding", 3, false]
+        ["_padding", 5, false]
       ]
     },
     {
@@ -93,12 +102,14 @@
         ["key", 32, false],
         ["key2", 32, false],
         ["value", 32, false],
+        ["upperBound", 32, false],
         ["clientID", 32, false],
         ["switchID", 2, false],
         ["pingPong", 2, false],
         ["queryType", 2, false],
         ["padding", 2, false],
-        ["readWriteAccess", 8, false]
+        ["readWriteAccess", 7, false],
+        ["rateLimitReached", 1, false]
       ]
     },
     {
@@ -7552,7 +7563,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 330,
+        "line" : 364,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -7567,7 +7578,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 168,
+        "line" : 170,
         "column" : 26,
         "source_fragment" : "requestCounts"
       },
@@ -7579,7 +7590,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 169,
+        "line" : 171,
         "column" : 26,
         "source_fragment" : "pingPongCounts1"
       },
@@ -7591,9 +7602,21 @@
       "id" : 2,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 170,
+        "line" : 172,
         "column" : 26,
         "source_fragment" : "pingPongCounts2"
+      },
+      "size" : 2,
+      "bitwidth" : 32
+    },
+    {
+      "name" : "MyIngress.rateLimitRequests",
+      "id" : 3,
+      "source_info" : {
+        "filename" : "ms3-0.p4",
+        "line" : 173,
+        "column" : 26,
+        "source_fragment" : "rateLimitRequests"
       },
       "size" : 2,
       "bitwidth" : 32
@@ -7605,7 +7628,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 307,
+        "line" : 341,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -7732,7 +7755,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 174,
+            "line" : 177,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.readWriteAccess ="
           }
@@ -7805,7 +7828,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 180,
+            "line" : 183,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.readWriteAccess ="
           }
@@ -7918,7 +7941,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 182,
+            "line" : 185,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.readWriteAccess ="
           }
@@ -8060,11 +8083,11 @@
                               "op" : ">",
                               "left" : {
                                 "type" : "field",
-                                "value" : ["kvsQuery", "key"]
+                                "value" : ["kvsQuery", "upperBound"]
                               },
                               "right" : {
                                 "type" : "hexstr",
-                                "value" : "0x00000100"
+                                "value" : "0x00000101"
                               }
                             }
                           }
@@ -8078,7 +8101,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 184,
+            "line" : 187,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.readWriteAccess ="
           }
@@ -8088,7 +8111,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["kvsQuery", "key2"]
+              "value" : ["kvsQuery", "readWriteAccess"]
             },
             {
               "type" : "expression",
@@ -8098,11 +8121,11 @@
                   "op" : "?",
                   "left" : {
                     "type" : "hexstr",
-                    "value" : "0x00000101"
+                    "value" : "0x01"
                   },
                   "right" : {
                     "type" : "field",
-                    "value" : ["kvsQuery", "key2"]
+                    "value" : ["kvsQuery", "readWriteAccess"]
                   },
                   "cond" : {
                     "type" : "expression",
@@ -8229,11 +8252,11 @@
                                       "op" : ">",
                                       "left" : {
                                         "type" : "field",
-                                        "value" : ["kvsQuery", "key"]
+                                        "value" : ["kvsQuery", "upperBound"]
                                       },
                                       "right" : {
                                         "type" : "hexstr",
-                                        "value" : "0x00000100"
+                                        "value" : "0x00000101"
                                       }
                                     }
                                   }
@@ -8267,11 +8290,11 @@
                               "op" : ">",
                               "left" : {
                                 "type" : "field",
-                                "value" : ["kvsQuery", "key2"]
+                                "value" : ["kvsQuery", "key"]
                               },
                               "right" : {
                                 "type" : "hexstr",
-                                "value" : "0x00000101"
+                                "value" : "0x00000100"
                               }
                             }
                           }
@@ -8285,9 +8308,9 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 186,
+            "line" : 189,
             "column" : 12,
-            "source_fragment" : "hdr.kvsQuery.key2 ="
+            "source_fragment" : "hdr.kvsQuery.readWriteAccess ="
           }
         }
       ]
@@ -8295,6 +8318,338 @@
     {
       "name" : "act",
       "id" : 3,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "rateLimitReached"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 217,
+            "column" : 20,
+            "source_fragment" : "hdr.kvsQuery.rateLimitReached = 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "padding"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 218,
+            "column" : 20,
+            "source_fragment" : "hdr.kvsQuery.padding = 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0001"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 219,
+            "column" : 20,
+            "source_fragment" : "standard_metadata.egress_spec = 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_0",
+      "id" : 4,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "numAliceRequests_0"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 222,
+            "column" : 47,
+            "source_fragment" : "numAliceRequests + 1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.rateLimitRequests"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 222,
+            "column" : 20,
+            "source_fragment" : "rateLimitRequests.write(0, numAliceRequests + 1)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_1",
+      "id" : 5,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "numAliceRequests_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.rateLimitRequests"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 214,
+            "column" : 16,
+            "source_fragment" : "rateLimitRequests.read(numAliceRequests, 0)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_2",
+      "id" : 6,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "rateLimitReached"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 230,
+            "column" : 20,
+            "source_fragment" : "hdr.kvsQuery.rateLimitReached = 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "padding"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 231,
+            "column" : 20,
+            "source_fragment" : "hdr.kvsQuery.padding = 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0001"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 232,
+            "column" : 20,
+            "source_fragment" : "standard_metadata.egress_spec = 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_3",
+      "id" : 7,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_0"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "numBobRequests_0"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 235,
+            "column" : 47,
+            "source_fragment" : "numBobRequests + 1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.rateLimitRequests"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000001"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_0"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 235,
+            "column" : 20,
+            "source_fragment" : "rateLimitRequests.write(1, numBobRequests + 1)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_4",
+      "id" : 8,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "numBobRequests_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.rateLimitRequests"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000001"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 227,
+            "column" : 16,
+            "source_fragment" : "rateLimitRequests.read(numBobRequests, 1)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_5",
+      "id" : 9,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8311,7 +8666,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 206,
+            "line" : 241,
             "column" : 16,
             "source_fragment" : "hdr.kvsQuery.padding = 1"
           }
@@ -8330,7 +8685,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 207,
+            "line" : 242,
             "column" : 16,
             "source_fragment" : "standard_metadata.egress_spec = 1"
           }
@@ -8338,8 +8693,8 @@
       ]
     },
     {
-      "name" : "act_0",
-      "id" : 4,
+      "name" : "act_6",
+      "id" : 10,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8360,7 +8715,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 216,
+            "line" : 251,
             "column" : 20,
             "source_fragment" : "requestCounts.write(0, 0)"
           }
@@ -8383,7 +8738,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 219,
+            "line" : 254,
             "column" : 20,
             "source_fragment" : "pingPongCounts1.read(pingCount, 0)"
           }
@@ -8393,7 +8748,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "tmp"]
+              "value" : ["scalars", "tmp_1"]
             },
             {
               "type" : "expression",
@@ -8425,7 +8780,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 220,
+            "line" : 255,
             "column" : 45,
             "source_fragment" : "pingCount + 1"
           }
@@ -8443,12 +8798,12 @@
             },
             {
               "type" : "field",
-              "value" : ["scalars", "tmp"]
+              "value" : ["scalars", "tmp_1"]
             }
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 220,
+            "line" : 255,
             "column" : 20,
             "source_fragment" : "pingPongCounts1.write(0, pingCount + 1)"
           }
@@ -8471,7 +8826,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 221,
+            "line" : 256,
             "column" : 20,
             "source_fragment" : "pingPongCounts2.read(pingCount, 0)"
           }
@@ -8481,7 +8836,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "tmp_0"]
+              "value" : ["scalars", "tmp_2"]
             },
             {
               "type" : "expression",
@@ -8513,7 +8868,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 222,
+            "line" : 257,
             "column" : 45,
             "source_fragment" : "pingCount + 1"
           }
@@ -8531,12 +8886,12 @@
             },
             {
               "type" : "field",
-              "value" : ["scalars", "tmp_0"]
+              "value" : ["scalars", "tmp_2"]
             }
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 222,
+            "line" : 257,
             "column" : 20,
             "source_fragment" : "pingPongCounts2.write(0, pingCount + 1)"
           }
@@ -8555,7 +8910,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 224,
+            "line" : 259,
             "column" : 20,
             "source_fragment" : "clone(CloneType.I2E, 2)"
           }
@@ -8574,7 +8929,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 225,
+            "line" : 260,
             "column" : 20,
             "source_fragment" : "hdr.kvsQuery.pingPong = 0"
           }
@@ -8582,8 +8937,8 @@
       ]
     },
     {
-      "name" : "act_1",
-      "id" : 5,
+      "name" : "act_7",
+      "id" : 11,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8600,7 +8955,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 229,
+            "line" : 264,
             "column" : 24,
             "source_fragment" : "clone(CloneType.I2E, 1)"
           }
@@ -8608,8 +8963,8 @@
       ]
     },
     {
-      "name" : "act_2",
-      "id" : 6,
+      "name" : "act_8",
+      "id" : 12,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8626,7 +8981,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 231,
+            "line" : 266,
             "column" : 20,
             "source_fragment" : "hdr.kvsQuery.pingPong = 0"
           }
@@ -8636,7 +8991,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "tmp_1"]
+              "value" : ["scalars", "tmp_3"]
             },
             {
               "type" : "expression",
@@ -8668,7 +9023,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 233,
+            "line" : 268,
             "column" : 43,
             "source_fragment" : "numRequest + 1"
           }
@@ -8686,12 +9041,12 @@
             },
             {
               "type" : "field",
-              "value" : ["scalars", "tmp_1"]
+              "value" : ["scalars", "tmp_3"]
             }
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 233,
+            "line" : 268,
             "column" : 20,
             "source_fragment" : "requestCounts.write(0, numRequest + 1)"
           }
@@ -8699,8 +9054,8 @@
       ]
     },
     {
-      "name" : "act_3",
-      "id" : 7,
+      "name" : "act_9",
+      "id" : 13,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8721,7 +9076,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 213,
+            "line" : 248,
             "column" : 16,
             "source_fragment" : "requestCounts.read(numRequest, 0)"
           }
@@ -8729,8 +9084,8 @@
       ]
     },
     {
-      "name" : "act_4",
-      "id" : 8,
+      "name" : "act_10",
+      "id" : 14,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8747,7 +9102,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 237,
+            "line" : 272,
             "column" : 20,
             "source_fragment" : "standard_metadata.egress_spec = 2"
           }
@@ -8755,8 +9110,8 @@
       ]
     },
     {
-      "name" : "act_5",
-      "id" : 9,
+      "name" : "act_11",
+      "id" : 15,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8773,7 +9128,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 239,
+            "line" : 274,
             "column" : 20,
             "source_fragment" : "standard_metadata.egress_spec = 3"
           }
@@ -8781,8 +9136,8 @@
       ]
     },
     {
-      "name" : "act_6",
-      "id" : 10,
+      "name" : "act_12",
+      "id" : 16,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8822,7 +9177,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 258,
+            "line" : 293,
             "column" : 24,
             "source_fragment" : "pongCount1 = pongCount1 + 1"
           }
@@ -8845,7 +9200,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 259,
+            "line" : 294,
             "column" : 24,
             "source_fragment" : "pingPongCounts1.write(1, pongCount1)"
           }
@@ -8853,8 +9208,8 @@
       ]
     },
     {
-      "name" : "act_7",
-      "id" : 11,
+      "name" : "act_13",
+      "id" : 17,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8894,7 +9249,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 261,
+            "line" : 296,
             "column" : 24,
             "source_fragment" : "pongCount2 = pongCount2 + 1"
           }
@@ -8917,7 +9272,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 262,
+            "line" : 297,
             "column" : 24,
             "source_fragment" : "pingPongCounts2.write(1, pongCount2)"
           }
@@ -8925,8 +9280,8 @@
       ]
     },
     {
-      "name" : "act_8",
-      "id" : 12,
+      "name" : "act_14",
+      "id" : 18,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -8943,7 +9298,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 264,
+            "line" : 299,
             "column" : 24,
             "source_fragment" : "hdr.kvsQuery.pingPong = 0"
           }
@@ -8951,130 +9306,8 @@
       ]
     },
     {
-      "name" : "act_9",
-      "id" : 13,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "register_read",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "numRequest_1"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "MyIngress.requestCounts"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000001"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms3-0.p4",
-            "line" : 246,
-            "column" : 16,
-            "source_fragment" : "requestCounts.read(numRequest, 1)"
-          }
-        },
-        {
-          "op" : "register_read",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "pingCount1_0"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "MyIngress.pingPongCounts1"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms3-0.p4",
-            "line" : 251,
-            "column" : 16,
-            "source_fragment" : "pingPongCounts1.read(pingCount1, 0)"
-          }
-        },
-        {
-          "op" : "register_read",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "pongCount1_0"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "MyIngress.pingPongCounts1"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000001"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms3-0.p4",
-            "line" : 252,
-            "column" : 16,
-            "source_fragment" : "pingPongCounts1.read(pongCount1, 1)"
-          }
-        },
-        {
-          "op" : "register_read",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "pingCount2_0"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "MyIngress.pingPongCounts2"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms3-0.p4",
-            "line" : 253,
-            "column" : 16,
-            "source_fragment" : "pingPongCounts2.read(pingCount2, 0)"
-          }
-        },
-        {
-          "op" : "register_read",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "pongCount2_0"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "MyIngress.pingPongCounts2"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000001"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms3-0.p4",
-            "line" : 254,
-            "column" : 16,
-            "source_fragment" : "pingPongCounts2.read(pongCount2, 1)"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "act_10",
-      "id" : 14,
+      "name" : "act_15",
+      "id" : 19,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -9091,7 +9324,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 270,
+            "line" : 304,
             "column" : 24,
             "source_fragment" : "hdr.kvsQuery.pingPong = 3"
           }
@@ -9099,8 +9332,8 @@
       ]
     },
     {
-      "name" : "act_11",
-      "id" : 15,
+      "name" : "act_16",
+      "id" : 20,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -9117,7 +9350,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 274,
+            "line" : 308,
             "column" : 24,
             "source_fragment" : "hdr.kvsQuery.pingPong = 3"
           }
@@ -9125,8 +9358,8 @@
       ]
     },
     {
-      "name" : "act_12",
-      "id" : 16,
+      "name" : "act_17",
+      "id" : 21,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -9147,7 +9380,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 276,
+            "line" : 310,
             "column" : 20,
             "source_fragment" : "requestCounts.write(1, 0)"
           }
@@ -9155,8 +9388,8 @@
       ]
     },
     {
-      "name" : "act_13",
-      "id" : 17,
+      "name" : "act_18",
+      "id" : 22,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -9164,7 +9397,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "tmp_2"]
+              "value" : ["scalars", "tmp_4"]
             },
             {
               "type" : "expression",
@@ -9196,7 +9429,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 279,
+            "line" : 313,
             "column" : 43,
             "source_fragment" : "numRequest + 1"
           }
@@ -9214,12 +9447,12 @@
             },
             {
               "type" : "field",
-              "value" : ["scalars", "tmp_2"]
+              "value" : ["scalars", "tmp_4"]
             }
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 279,
+            "line" : 313,
             "column" : 20,
             "source_fragment" : "requestCounts.write(1, numRequest + 1)"
           }
@@ -9227,8 +9460,130 @@
       ]
     },
     {
-      "name" : "act_14",
-      "id" : 18,
+      "name" : "act_19",
+      "id" : 23,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "numRequest_1"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.requestCounts"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000001"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 281,
+            "column" : 16,
+            "source_fragment" : "requestCounts.read(numRequest, 1)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "pingCount1_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.pingPongCounts1"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 286,
+            "column" : 16,
+            "source_fragment" : "pingPongCounts1.read(pingCount1, 0)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "pongCount1_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.pingPongCounts1"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000001"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 287,
+            "column" : 16,
+            "source_fragment" : "pingPongCounts1.read(pongCount1, 1)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "pingCount2_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.pingPongCounts2"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 288,
+            "column" : 16,
+            "source_fragment" : "pingPongCounts2.read(pingCount2, 0)"
+          }
+        },
+        {
+          "op" : "register_read",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "pongCount2_0"]
+            },
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.pingPongCounts2"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000001"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 289,
+            "column" : 16,
+            "source_fragment" : "pingPongCounts2.read(pongCount2, 1)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_20",
+      "id" : 24,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -9245,7 +9600,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 281,
+            "line" : 315,
             "column" : 16,
             "source_fragment" : "standard_metadata.egress_spec = 1"
           }
@@ -9253,8 +9608,8 @@
       ]
     },
     {
-      "name" : "act_15",
-      "id" : 19,
+      "name" : "act_21",
+      "id" : 25,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -9271,7 +9626,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 296,
+            "line" : 330,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.pingPong = 1"
           }
@@ -9285,7 +9640,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 164,
+        "line" : 166,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -9296,7 +9651,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 190,
+            "line" : 196,
             "column" : 10,
             "source_fragment" : "ACL"
           },
@@ -9340,8 +9695,37 @@
           "id" : 1,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 206,
-            "column" : 37,
+            "line" : 214,
+            "column" : 16,
+            "source_fragment" : "rateLimitRequests.read(numAliceRequests, 0)"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [5],
+          "actions" : ["act_1"],
+          "base_default_next" : "node_6",
+          "next_tables" : {
+            "act_1" : "node_6"
+          },
+          "default_entry" : {
+            "action_id" : 5,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_0",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 217,
+            "column" : 50,
             "source_fragment" : "= 1; ..."
           },
           "key" : [],
@@ -9353,41 +9737,12 @@
           "direct_meters" : null,
           "action_ids" : [3],
           "actions" : ["act"],
-          "base_default_next" : null,
+          "base_default_next" : "node_14",
           "next_tables" : {
-            "act" : null
+            "act" : "node_14"
           },
           "default_entry" : {
             "action_id" : 3,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_act_0",
-          "id" : 2,
-          "source_info" : {
-            "filename" : "ms3-0.p4",
-            "line" : 213,
-            "column" : 16,
-            "source_fragment" : "requestCounts.read(numRequest, 0)"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [7],
-          "actions" : ["act_3"],
-          "base_default_next" : "node_8",
-          "next_tables" : {
-            "act_3" : "node_8"
-          },
-          "default_entry" : {
-            "action_id" : 7,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -9398,9 +9753,9 @@
           "id" : 3,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 216,
+            "line" : 222,
             "column" : 20,
-            "source_fragment" : "requestCounts.write(0, 0); ..."
+            "source_fragment" : "rateLimitRequests.write(0, numAliceRequests + 1)"
           },
           "key" : [],
           "match_type" : "exact",
@@ -9411,9 +9766,9 @@
           "direct_meters" : null,
           "action_ids" : [4],
           "actions" : ["act_0"],
-          "base_default_next" : "node_13",
+          "base_default_next" : "node_14",
           "next_tables" : {
-            "act_0" : "node_13"
+            "act_0" : "node_14"
           },
           "default_entry" : {
             "action_id" : 4,
@@ -9427,9 +9782,9 @@
           "id" : 4,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 229,
-            "column" : 24,
-            "source_fragment" : "clone(CloneType.I2E, 1)"
+            "line" : 227,
+            "column" : 16,
+            "source_fragment" : "rateLimitRequests.read(numBobRequests, 1)"
           },
           "key" : [],
           "match_type" : "exact",
@@ -9438,14 +9793,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [5],
-          "actions" : ["act_1"],
-          "base_default_next" : "tbl_act_3",
+          "action_ids" : [8],
+          "actions" : ["act_4"],
+          "base_default_next" : "node_11",
           "next_tables" : {
-            "act_1" : "tbl_act_3"
+            "act_4" : "node_11"
           },
           "default_entry" : {
-            "action_id" : 5,
+            "action_id" : 8,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -9456,9 +9811,9 @@
           "id" : 5,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 231,
-            "column" : 42,
-            "source_fragment" : "= 0; ..."
+            "line" : 230,
+            "column" : 50,
+            "source_fragment" : "= 1; ..."
           },
           "key" : [],
           "match_type" : "exact",
@@ -9469,9 +9824,9 @@
           "direct_meters" : null,
           "action_ids" : [6],
           "actions" : ["act_2"],
-          "base_default_next" : "node_13",
+          "base_default_next" : "node_14",
           "next_tables" : {
-            "act_2" : "node_13"
+            "act_2" : "node_14"
           },
           "default_entry" : {
             "action_id" : 6,
@@ -9485,9 +9840,9 @@
           "id" : 6,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 237,
-            "column" : 50,
-            "source_fragment" : "="
+            "line" : 235,
+            "column" : 20,
+            "source_fragment" : "rateLimitRequests.write(1, numBobRequests + 1)"
           },
           "key" : [],
           "match_type" : "exact",
@@ -9496,14 +9851,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [8],
-          "actions" : ["act_4"],
-          "base_default_next" : null,
+          "action_ids" : [7],
+          "actions" : ["act_3"],
+          "base_default_next" : "node_14",
           "next_tables" : {
-            "act_4" : null
+            "act_3" : "node_14"
           },
           "default_entry" : {
-            "action_id" : 8,
+            "action_id" : 7,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -9514,9 +9869,9 @@
           "id" : 7,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 239,
-            "column" : 50,
-            "source_fragment" : "="
+            "line" : 241,
+            "column" : 37,
+            "source_fragment" : "= 1; ..."
           },
           "key" : [],
           "match_type" : "exact",
@@ -9543,9 +9898,9 @@
           "id" : 8,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 246,
+            "line" : 248,
             "column" : 16,
-            "source_fragment" : "requestCounts.read(numRequest, 1); ..."
+            "source_fragment" : "requestCounts.read(numRequest, 0)"
           },
           "key" : [],
           "match_type" : "exact",
@@ -9572,9 +9927,9 @@
           "id" : 9,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 258,
-            "column" : 35,
-            "source_fragment" : "= pongCount1 + 1; ..."
+            "line" : 251,
+            "column" : 20,
+            "source_fragment" : "requestCounts.write(0, 0); ..."
           },
           "key" : [],
           "match_type" : "exact",
@@ -9585,9 +9940,9 @@
           "direct_meters" : null,
           "action_ids" : [10],
           "actions" : ["act_6"],
-          "base_default_next" : "node_24",
+          "base_default_next" : "node_23",
           "next_tables" : {
-            "act_6" : "node_24"
+            "act_6" : "node_23"
           },
           "default_entry" : {
             "action_id" : 10,
@@ -9601,9 +9956,9 @@
           "id" : 10,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 261,
-            "column" : 35,
-            "source_fragment" : "= pongCount2 + 1; ..."
+            "line" : 264,
+            "column" : 24,
+            "source_fragment" : "clone(CloneType.I2E, 1)"
           },
           "key" : [],
           "match_type" : "exact",
@@ -9614,9 +9969,9 @@
           "direct_meters" : null,
           "action_ids" : [11],
           "actions" : ["act_7"],
-          "base_default_next" : "node_24",
+          "base_default_next" : "tbl_act_9",
           "next_tables" : {
-            "act_7" : "node_24"
+            "act_7" : "tbl_act_9"
           },
           "default_entry" : {
             "action_id" : 11,
@@ -9630,9 +9985,9 @@
           "id" : 11,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 264,
-            "column" : 46,
-            "source_fragment" : "="
+            "line" : 266,
+            "column" : 42,
+            "source_fragment" : "= 0; ..."
           },
           "key" : [],
           "match_type" : "exact",
@@ -9643,9 +9998,9 @@
           "direct_meters" : null,
           "action_ids" : [12],
           "actions" : ["act_8"],
-          "base_default_next" : "node_24",
+          "base_default_next" : "node_23",
           "next_tables" : {
-            "act_8" : "node_24"
+            "act_8" : "node_23"
           },
           "default_entry" : {
             "action_id" : 12,
@@ -9659,8 +10014,8 @@
           "id" : 12,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 270,
-            "column" : 46,
+            "line" : 272,
+            "column" : 50,
             "source_fragment" : "="
           },
           "key" : [],
@@ -9672,9 +10027,9 @@
           "direct_meters" : null,
           "action_ids" : [14],
           "actions" : ["act_10"],
-          "base_default_next" : "node_27",
+          "base_default_next" : null,
           "next_tables" : {
-            "act_10" : "node_27"
+            "act_10" : null
           },
           "default_entry" : {
             "action_id" : 14,
@@ -9689,7 +10044,7 @@
           "source_info" : {
             "filename" : "ms3-0.p4",
             "line" : 274,
-            "column" : 46,
+            "column" : 50,
             "source_fragment" : "="
           },
           "key" : [],
@@ -9701,9 +10056,9 @@
           "direct_meters" : null,
           "action_ids" : [15],
           "actions" : ["act_11"],
-          "base_default_next" : "tbl_act_12",
+          "base_default_next" : null,
           "next_tables" : {
-            "act_11" : "tbl_act_12"
+            "act_11" : null
           },
           "default_entry" : {
             "action_id" : 15,
@@ -9717,9 +10072,9 @@
           "id" : 14,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 276,
-            "column" : 20,
-            "source_fragment" : "requestCounts.write(1, 0)"
+            "line" : 281,
+            "column" : 16,
+            "source_fragment" : "requestCounts.read(numRequest, 1); ..."
           },
           "key" : [],
           "match_type" : "exact",
@@ -9728,14 +10083,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [16],
-          "actions" : ["act_12"],
-          "base_default_next" : "tbl_act_14",
+          "action_ids" : [23],
+          "actions" : ["act_19"],
+          "base_default_next" : "node_28",
           "next_tables" : {
-            "act_12" : "tbl_act_14"
+            "act_19" : "node_28"
           },
           "default_entry" : {
-            "action_id" : 16,
+            "action_id" : 23,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -9746,9 +10101,9 @@
           "id" : 15,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 279,
-            "column" : 20,
-            "source_fragment" : "requestCounts.write(1, numRequest + 1)"
+            "line" : 293,
+            "column" : 35,
+            "source_fragment" : "= pongCount1 + 1; ..."
           },
           "key" : [],
           "match_type" : "exact",
@@ -9757,14 +10112,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [17],
-          "actions" : ["act_13"],
-          "base_default_next" : "tbl_act_14",
+          "action_ids" : [16],
+          "actions" : ["act_12"],
+          "base_default_next" : "tbl_act_20",
           "next_tables" : {
-            "act_13" : "tbl_act_14"
+            "act_12" : "tbl_act_20"
           },
           "default_entry" : {
-            "action_id" : 17,
+            "action_id" : 16,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -9775,7 +10130,36 @@
           "id" : 16,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 281,
+            "line" : 296,
+            "column" : 35,
+            "source_fragment" : "= pongCount2 + 1; ..."
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [17],
+          "actions" : ["act_13"],
+          "base_default_next" : "tbl_act_20",
+          "next_tables" : {
+            "act_13" : "tbl_act_20"
+          },
+          "default_entry" : {
+            "action_id" : 17,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_15",
+          "id" : 17,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 299,
             "column" : 46,
             "source_fragment" : "="
           },
@@ -9788,12 +10172,157 @@
           "direct_meters" : null,
           "action_ids" : [18],
           "actions" : ["act_14"],
-          "base_default_next" : null,
+          "base_default_next" : "tbl_act_20",
           "next_tables" : {
-            "act_14" : null
+            "act_14" : "tbl_act_20"
           },
           "default_entry" : {
             "action_id" : 18,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_16",
+          "id" : 18,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 304,
+            "column" : 46,
+            "source_fragment" : "="
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [19],
+          "actions" : ["act_15"],
+          "base_default_next" : "node_37",
+          "next_tables" : {
+            "act_15" : "node_37"
+          },
+          "default_entry" : {
+            "action_id" : 19,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_17",
+          "id" : 19,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 308,
+            "column" : 46,
+            "source_fragment" : "="
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [20],
+          "actions" : ["act_16"],
+          "base_default_next" : "tbl_act_18",
+          "next_tables" : {
+            "act_16" : "tbl_act_18"
+          },
+          "default_entry" : {
+            "action_id" : 20,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_18",
+          "id" : 20,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 310,
+            "column" : 20,
+            "source_fragment" : "requestCounts.write(1, 0)"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [21],
+          "actions" : ["act_17"],
+          "base_default_next" : "tbl_act_20",
+          "next_tables" : {
+            "act_17" : "tbl_act_20"
+          },
+          "default_entry" : {
+            "action_id" : 21,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_19",
+          "id" : 21,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 313,
+            "column" : 20,
+            "source_fragment" : "requestCounts.write(1, numRequest + 1)"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [22],
+          "actions" : ["act_18"],
+          "base_default_next" : "tbl_act_20",
+          "next_tables" : {
+            "act_18" : "tbl_act_20"
+          },
+          "default_entry" : {
+            "action_id" : 22,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_20",
+          "id" : 22,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 315,
+            "column" : 46,
+            "source_fragment" : "="
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [24],
+          "actions" : ["act_20"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "act_20" : null
+          },
+          "default_entry" : {
+            "action_id" : 24,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -9807,7 +10336,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 202,
+            "line" : 208,
             "column" : 12,
             "source_fragment" : "hdr.response[0].isValid()"
           },
@@ -9830,7 +10359,151 @@
           "id" : 1,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 205,
+            "line" : 212,
+            "column" : 16,
+            "source_fragment" : "standard_metadata.ingress_port == 1 && hdr.kvsQuery.clientID == 0"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["standard_metadata", "ingress_port"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0001"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["kvsQuery", "clientID"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x00000000"
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "tbl_act",
+          "false_next" : "node_9"
+        },
+        {
+          "name" : "node_6",
+          "id" : 2,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 216,
+            "column" : 20,
+            "source_fragment" : "numAliceRequests == 9"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["scalars", "numAliceRequests_0"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x00000009"
+              }
+            }
+          },
+          "true_next" : "tbl_act_0",
+          "false_next" : "tbl_act_1"
+        },
+        {
+          "name" : "node_9",
+          "id" : 3,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 225,
+            "column" : 23,
+            "source_fragment" : "standard_metadata.ingress_port == 1 && hdr.kvsQuery.clientID == 1"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["standard_metadata", "ingress_port"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0001"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["kvsQuery", "clientID"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x00000001"
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "tbl_act_2",
+          "false_next" : "node_14"
+        },
+        {
+          "name" : "node_11",
+          "id" : 4,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 229,
+            "column" : 20,
+            "source_fragment" : "numBobRequests == 9"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "==",
+              "left" : {
+                "type" : "field",
+                "value" : ["scalars", "numBobRequests_0"]
+              },
+              "right" : {
+                "type" : "hexstr",
+                "value" : "0x00000009"
+              }
+            }
+          },
+          "true_next" : "tbl_act_3",
+          "false_next" : "tbl_act_4"
+        },
+        {
+          "name" : "node_14",
+          "id" : 5,
+          "source_info" : {
+            "filename" : "ms3-0.p4",
+            "line" : 240,
             "column" : 16,
             "source_fragment" : "hdr.kvsQuery.readWriteAccess == 1 || hdr.kvsQuery.readWriteAccess == 2"
           },
@@ -9868,41 +10541,61 @@
               }
             }
           },
-          "true_next" : "tbl_act",
-          "false_next" : "node_6"
+          "true_next" : "tbl_act_5",
+          "false_next" : "node_16"
         },
         {
-          "name" : "node_6",
-          "id" : 2,
+          "name" : "node_16",
+          "id" : 6,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 210,
+            "line" : 245,
             "column" : 21,
-            "source_fragment" : "standard_metadata.ingress_port == 1"
+            "source_fragment" : "standard_metadata.ingress_port == 1 && hdr.kvsQuery.rateLimitReached == 0"
           },
           "expression" : {
             "type" : "expression",
             "value" : {
-              "op" : "==",
+              "op" : "and",
               "left" : {
-                "type" : "field",
-                "value" : ["standard_metadata", "ingress_port"]
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["standard_metadata", "ingress_port"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x0001"
+                  }
+                }
               },
               "right" : {
-                "type" : "hexstr",
-                "value" : "0x0001"
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["kvsQuery", "rateLimitReached"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x00"
+                  }
+                }
               }
             }
           },
-          "true_next" : "tbl_act_0",
-          "false_next" : "tbl_act_6"
+          "true_next" : "tbl_act_6",
+          "false_next" : "tbl_act_12"
         },
         {
-          "name" : "node_8",
-          "id" : 3,
+          "name" : "node_18",
+          "id" : 7,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 214,
+            "line" : 249,
             "column" : 20,
             "source_fragment" : "numRequest == 9"
           },
@@ -9920,15 +10613,15 @@
               }
             }
           },
-          "true_next" : "tbl_act_1",
-          "false_next" : "node_10"
+          "true_next" : "tbl_act_7",
+          "false_next" : "node_20"
         },
         {
-          "name" : "node_10",
-          "id" : 4,
+          "name" : "node_20",
+          "id" : 8,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 228,
+            "line" : 263,
             "column" : 24,
             "source_fragment" : "hdr.kvsQuery.queryType == 1"
           },
@@ -9946,15 +10639,15 @@
               }
             }
           },
-          "true_next" : "tbl_act_2",
-          "false_next" : "tbl_act_3"
+          "true_next" : "tbl_act_8",
+          "false_next" : "tbl_act_9"
         },
         {
-          "name" : "node_13",
-          "id" : 5,
+          "name" : "node_23",
+          "id" : 9,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 236,
+            "line" : 271,
             "column" : 20,
             "source_fragment" : "hdr.kvsQuery.key >= 0 && hdr.kvsQuery.key <= 512"
           },
@@ -9992,15 +10685,15 @@
               }
             }
           },
-          "true_next" : "tbl_act_4",
-          "false_next" : "node_15"
+          "true_next" : "tbl_act_10",
+          "false_next" : "node_25"
         },
         {
-          "name" : "node_15",
-          "id" : 6,
+          "name" : "node_25",
+          "id" : 10,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 238,
+            "line" : 273,
             "column" : 27,
             "source_fragment" : "hdr.kvsQuery.key > 512 && hdr.kvsQuery.key <= 1024"
           },
@@ -10039,14 +10732,14 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_act_5"
+          "true_next" : "tbl_act_11"
         },
         {
-          "name" : "node_18",
-          "id" : 7,
+          "name" : "node_28",
+          "id" : 11,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 256,
+            "line" : 291,
             "column" : 20,
             "source_fragment" : "hdr.kvsQuery.pingPong == 2"
           },
@@ -10064,15 +10757,15 @@
               }
             }
           },
-          "true_next" : "node_19",
-          "false_next" : "node_24"
+          "true_next" : "node_29",
+          "false_next" : "node_34"
         },
         {
-          "name" : "node_19",
-          "id" : 8,
+          "name" : "node_29",
+          "id" : 12,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 257,
+            "line" : 292,
             "column" : 24,
             "source_fragment" : "hdr.kvsQuery.switchID == 1"
           },
@@ -10090,15 +10783,15 @@
               }
             }
           },
-          "true_next" : "tbl_act_7",
-          "false_next" : "node_21"
+          "true_next" : "tbl_act_13",
+          "false_next" : "node_31"
         },
         {
-          "name" : "node_21",
-          "id" : 9,
+          "name" : "node_31",
+          "id" : 13,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 260,
+            "line" : 295,
             "column" : 31,
             "source_fragment" : "hdr.kvsQuery.switchID == 2"
           },
@@ -10116,16 +10809,16 @@
               }
             }
           },
-          "true_next" : "tbl_act_8",
-          "false_next" : "tbl_act_9"
+          "true_next" : "tbl_act_14",
+          "false_next" : "tbl_act_15"
         },
         {
-          "name" : "node_24",
-          "id" : 10,
+          "name" : "node_34",
+          "id" : 14,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 267,
-            "column" : 20,
+            "line" : 301,
+            "column" : 27,
             "source_fragment" : "numRequest == 14"
           },
           "expression" : {
@@ -10142,15 +10835,15 @@
               }
             }
           },
-          "true_next" : "node_25",
-          "false_next" : "tbl_act_13"
+          "true_next" : "node_35",
+          "false_next" : "tbl_act_19"
         },
         {
-          "name" : "node_25",
-          "id" : 11,
+          "name" : "node_35",
+          "id" : 15,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 268,
+            "line" : 302,
             "column" : 24,
             "source_fragment" : "pingCount1 - pongCount1 > 10"
           },
@@ -10188,15 +10881,15 @@
               }
             }
           },
-          "true_next" : "tbl_act_10",
-          "false_next" : "node_27"
+          "true_next" : "tbl_act_16",
+          "false_next" : "node_37"
         },
         {
-          "name" : "node_27",
-          "id" : 12,
+          "name" : "node_37",
+          "id" : 16,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 272,
+            "line" : 306,
             "column" : 24,
             "source_fragment" : "pingCount2 - pongCount2 > 10"
           },
@@ -10234,8 +10927,8 @@
               }
             }
           },
-          "true_next" : "tbl_act_11",
-          "false_next" : "tbl_act_12"
+          "true_next" : "tbl_act_17",
+          "false_next" : "tbl_act_18"
         }
       ]
     },
@@ -10244,18 +10937,18 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 291,
+        "line" : 325,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
-      "init_table" : "node_34",
+      "init_table" : "node_44",
       "tables" : [
         {
-          "name" : "tbl_act_15",
-          "id" : 17,
+          "name" : "tbl_act_21",
+          "id" : 23,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 296,
+            "line" : 330,
             "column" : 34,
             "source_fragment" : "="
           },
@@ -10266,14 +10959,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [19],
-          "actions" : ["act_15"],
+          "action_ids" : [25],
+          "actions" : ["act_21"],
           "base_default_next" : null,
           "next_tables" : {
-            "act_15" : null
+            "act_21" : null
           },
           "default_entry" : {
-            "action_id" : 19,
+            "action_id" : 25,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -10283,11 +10976,11 @@
       "action_profiles" : [],
       "conditionals" : [
         {
-          "name" : "node_34",
-          "id" : 13,
+          "name" : "node_44",
+          "id" : 17,
           "source_info" : {
             "filename" : "ms3-0.p4",
-            "line" : 295,
+            "line" : 329,
             "column" : 12,
             "source_fragment" : "standard_metadata.instance_type == 1"
           },
@@ -10306,7 +10999,7 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_act_15"
+          "true_next" : "tbl_act_21"
         }
       ]
     }
@@ -10317,7 +11010,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-0.p4",
-        "line" : 307,
+        "line" : 341,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -10367,16 +11060,24 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
+      "intrinsic_metadata.lf_field_list",
+      ["standard_metadata", "lf_field_list"]
+    ],
+    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.resubmit_flag",
+      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.priority",
-      ["standard_metadata", "priority"]
+      "intrinsic_metadata.recirculate_flag",
+      ["standard_metadata", "recirculate_flag"]
     ]
   ],
   "program" : "ms3-0.p4",

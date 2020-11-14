@@ -67,12 +67,14 @@ header kvsQuery_t {
     bit<32> key;
     bit<32> key2;
     bit<32> value;
+    bit<32> upperBound;
     bit<32> clientID;
     bit<2> switchID;
     bit<2> pingPong; //0: normal packet, 1: ping packet, 2: pong packet, 3: failure indicator
     bit<2> queryType;
     bit<2> padding;
-    bit<8> readWriteAccess; // 0: all access, 1: no read access, 2: no write access
+    bit<7> readWriteAccess; // 0: all access, 1: no read access, 2: no write access
+    bit<1> rateLimitReached;
 }
 
 header response_t {
@@ -168,6 +170,7 @@ control MyIngress(inout headers hdr,
     register <bit<32>>(2) requestCounts; // 0: number of requests (if 10), 1: number of requests (if 15)
     register <bit<32>>(2) pingPongCounts1;// Switch 1, 0: count of pings, 1: count of pongs
     register <bit<32>>(2) pingPongCounts2;// Switch 2, 0: count of pings, 1: count of pongs
+    register <bit<32>>(2) rateLimitRequests; // Alice goes in slot 0, Bob in slot 1
 
     action setAlice() {
         if (hdr.kvsQuery.queryType == 1 && hdr.kvsQuery.key > 512) {
@@ -180,11 +183,14 @@ control MyIngress(inout headers hdr,
             hdr.kvsQuery.readWriteAccess = 1;
         } else if (hdr.kvsQuery.queryType == 1 && hdr.kvsQuery.key > 256) {
             hdr.kvsQuery.readWriteAccess = 2;
+        } else if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.upperBound > 257) {
+            hdr.kvsQuery.readWriteAccess = 1;
         } else if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.key > 256) {
             hdr.kvsQuery.readWriteAccess = 1;
-        } else if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.key2 > 257) {
-            hdr.kvsQuery.key2 = 257;
-        }
+        } 
+        // else if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.key2 > 257) {
+        //     hdr.kvsQuery.key2 = 257;
+        // }
     }
 
     table ACL {
@@ -201,13 +207,42 @@ control MyIngress(inout headers hdr,
     apply {
         if (hdr.response[0].isValid()) {
             ACL.apply();
-            // Alice can't write (block off switch 2 forwarding)
+
+            // Check if rate limit has been reached for clients
+            if (standard_metadata.ingress_port == 1 && hdr.kvsQuery.clientID == 0) {
+                bit<32> numAliceRequests = 0;
+                rateLimitRequests.read(numAliceRequests, 0);
+                // Set rateLimitReached field if rate limit has been reached for the client
+                if (numAliceRequests == 50) {
+                    hdr.kvsQuery.rateLimitReached = 1;
+                    hdr.kvsQuery.padding = 1;
+                    standard_metadata.egress_spec = 1;
+                } else {
+                    // Update number of requests for the client
+                    rateLimitRequests.write(0, numAliceRequests + 1);
+                }
+
+            } else if (standard_metadata.ingress_port == 1 && hdr.kvsQuery.clientID == 1) {
+                bit<32> numBobRequests = 0;
+                rateLimitRequests.read(numBobRequests, 1);
+                // Set rateLimitReached field if rate limit has been reached for the client
+                if (numBobRequests == 100) {
+                    hdr.kvsQuery.rateLimitReached = 1;
+                    hdr.kvsQuery.padding = 1;
+                    standard_metadata.egress_spec = 1;
+                } else {
+                    // Update number of requests for the client
+                    rateLimitRequests.write(1, numBobRequests + 1);
+                }
+            }
+
+            // Check for denied access and return packet to the host
             if (hdr.kvsQuery.readWriteAccess == 1 || hdr.kvsQuery.readWriteAccess == 2) {
                 hdr.kvsQuery.padding = 1;
                 standard_metadata.egress_spec = 1;
             }
             // forward traffic
-            else if (standard_metadata.ingress_port == 1){
+            else if (standard_metadata.ingress_port == 1 && hdr.kvsQuery.rateLimitReached == 0){
                 // Issue a ping for every 10th request
                 bit<32> numRequest = 0;
                 requestCounts.read(numRequest, 0);
@@ -263,8 +298,7 @@ control MyIngress(inout headers hdr,
                     } else {
                         hdr.kvsQuery.pingPong = 0;
                     }
-                }
-                if (numRequest == 14) {
+                } else if (numRequest == 14) {
                     if (pingCount1 - pongCount1 > 10) {
                         // Failure bound is 10 ping/pongs difference
                         hdr.kvsQuery.pingPong = 3;

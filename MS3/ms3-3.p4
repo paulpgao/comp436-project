@@ -67,12 +67,14 @@ header kvsQuery_t {
     bit<32> key;
     bit<32> key2;
     bit<32> value;
+    bit<32> upperBound;
     bit<32> clientID;
     bit<2> switchID;
     bit<2> pingPong; //0: normal packet, 1: ping packet, 2: pong packet, 3: failure indicator
     bit<2> queryType;
     bit<2> padding;
-    bit<8> readWriteAccess; // 0: all access, 1: no read access, 2: no write access
+    bit<7> readWriteAccess; // 0: all access, 1: no read access, 2: no write access
+    bit<1> rateLimitReached;
 }
 
 header response_t {

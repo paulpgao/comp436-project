@@ -61,28 +61,6 @@ tables {
   }
   size: 1024
 }
-tables {
-  preamble {
-    id: 33605580
-    name: "MyIngress.Pong"
-    alias: "Pong"
-  }
-  match_fields {
-    id: 1
-    name: "hdr.kvsQuery.pingPong"
-    bitwidth: 2
-    match_type: EXACT
-  }
-  action_refs {
-    id: 16842025
-  }
-  action_refs {
-    id: 16800567
-    annotations: "@defaultonly"
-    scope: DEFAULT_ONLY
-  }
-  size: 1024
-}
 actions {
   preamble {
     id: 16800567
@@ -133,13 +111,6 @@ actions {
     id: 16813393
     name: "MyIngress.rangeGet"
     alias: "rangeGet"
-  }
-}
-actions {
-  preamble {
-    id: 16842025
-    name: "MyIngress.setPong"
-    alias: "setPong"
   }
 }
 registers {

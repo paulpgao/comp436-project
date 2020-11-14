@@ -103,6 +103,9 @@ def main():
         if len(sys.argv) < 3:
             print 'pass 1 more argument:"<key>"'
             exit(1)
+        if int(sys.argv[2]) > 1025 or int(sys.argv[2]) < 0:
+            print 'invalid value'
+            exit(1)
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)
         pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=0, key=int(sys.argv[2])) / TCP(dport=1234, sport=random.randint(49152,65535)) / "get"
@@ -111,6 +114,9 @@ def main():
     elif sys.argv[1] == "put":
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<key>" "<value>"'
+            exit(1)
+        if int(sys.argv[2]) > 1025 or int(sys.argv[2]) < 0:
+            print 'invalid value'
             exit(1)
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)

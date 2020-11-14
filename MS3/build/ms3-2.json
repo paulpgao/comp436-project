@@ -20,7 +20,10 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
+        ["clone_spec", 32, false],
         ["instance_type", 32, false],
+        ["drop", 1, false],
+        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -28,12 +31,14 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
+        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
+        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
+        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["priority", 3, false],
-        ["_padding", 3, false]
+        ["_padding", 5, false]
       ]
     },
     {
@@ -88,12 +93,14 @@
         ["key", 32, false],
         ["key2", 32, false],
         ["value", 32, false],
+        ["upperBound", 32, false],
         ["clientID", 32, false],
         ["switchID", 2, false],
         ["pingPong", 2, false],
         ["queryType", 2, false],
         ["padding", 2, false],
-        ["readWriteAccess", 8, false]
+        ["readWriteAccess", 7, false],
+        ["rateLimitReached", 1, false]
       ]
     },
     {
@@ -3753,7 +3760,7 @@
       "name" : "metadata",
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 255,
+        "line" : 247,
         "column" : 26,
         "source_fragment" : "meta"
       },
@@ -3962,7 +3969,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 321,
+        "line" : 314,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -3977,7 +3984,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 168,
+        "line" : 170,
         "column" : 28,
         "source_fragment" : "database"
       },
@@ -3989,7 +3996,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 169,
+        "line" : 171,
         "column" : 27,
         "source_fragment" : "isFilled"
       },
@@ -4003,7 +4010,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 298,
+        "line" : 291,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4071,14 +4078,8 @@
       "primitives" : []
     },
     {
-      "name" : "NoAction",
-      "id" : 2,
-      "runtime_data" : [],
-      "primitives" : []
-    },
-    {
       "name" : "MyIngress.set_nhop",
-      "id" : 3,
+      "id" : 2,
       "runtime_data" : [
         {
           "name" : "nhop_ipv4",
@@ -4104,7 +4105,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 173,
+            "line" : 175,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.dstAddr = nhop_ipv4"
           }
@@ -4123,9 +4124,31 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 174,
+            "line" : 176,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.drop",
+      "id" : 3,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "mark_to_drop",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "standard_metadata"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms3-2.p4",
+            "line" : 181,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
           }
         }
       ]
@@ -4145,29 +4168,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 179,
-            "column" : 8,
-            "source_fragment" : "mark_to_drop(standard_metadata)"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "MyIngress.drop",
-      "id" : 5,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "mark_to_drop",
-          "parameters" : [
-            {
-              "type" : "header",
-              "value" : "standard_metadata"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms3-2.p4",
-            "line" : 179,
+            "line" : 181,
             "column" : 8,
             "source_fragment" : "mark_to_drop(standard_metadata)"
           }
@@ -4176,7 +4177,7 @@
     },
     {
       "name" : "MyIngress.get",
-      "id" : 6,
+      "id" : 5,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -4216,7 +4217,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 185,
+            "line" : 187,
             "column" : 45,
             "source_fragment" : "hdr.kvsQuery.key - 512"
           }
@@ -4239,7 +4240,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 185,
+            "line" : 187,
             "column" : 8,
             "source_fragment" : "database.read(hdr.response[0].value, hdr.kvsQuery.key - 512)"
           }
@@ -4281,7 +4282,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 186,
+            "line" : 188,
             "column" : 46,
             "source_fragment" : "hdr.kvsQuery.key - 512"
           }
@@ -4304,7 +4305,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 186,
+            "line" : 188,
             "column" : 8,
             "source_fragment" : "isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key - 512)"
           }
@@ -4313,7 +4314,7 @@
     },
     {
       "name" : "MyIngress.put",
-      "id" : 7,
+      "id" : 6,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -4353,7 +4354,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 190,
+            "line" : 192,
             "column" : 23,
             "source_fragment" : "hdr.kvsQuery.key - 512"
           }
@@ -4376,7 +4377,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 190,
+            "line" : 192,
             "column" : 8,
             "source_fragment" : "database.write(hdr.kvsQuery.key - 512, hdr.kvsQuery.value)"
           }
@@ -4418,7 +4419,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 191,
+            "line" : 193,
             "column" : 23,
             "source_fragment" : "hdr.kvsQuery.key - 512"
           }
@@ -4441,7 +4442,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 191,
+            "line" : 193,
             "column" : 8,
             "source_fragment" : "isFilled.write(hdr.kvsQuery.key - 512, 1)"
           }
@@ -4450,7 +4451,7 @@
     },
     {
       "name" : "MyIngress.rangeGet",
-      "id" : 8,
+      "id" : 7,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -4467,7 +4468,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 195,
+            "line" : 197,
             "column" : 8,
             "source_fragment" : "hdr.response.push_front(1)"
           }
@@ -4482,7 +4483,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 196,
+            "line" : 198,
             "column" : 8,
             "source_fragment" : "hdr.response[0].setValid()"
           }
@@ -4524,7 +4525,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 197,
+            "line" : 199,
             "column" : 39,
             "source_fragment" : "hdr.kvsQuery.key - 512"
           }
@@ -4547,7 +4548,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 197,
+            "line" : 199,
             "column" : 2,
             "source_fragment" : "database.read(hdr.response[0].value, hdr.kvsQuery.key - 512)"
           }
@@ -4589,7 +4590,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 198,
+            "line" : 200,
             "column" : 46,
             "source_fragment" : "hdr.kvsQuery.key - 512"
           }
@@ -4612,7 +4613,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 198,
+            "line" : 200,
             "column" : 8,
             "source_fragment" : "isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key - 512)"
           }
@@ -4654,7 +4655,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 199,
+            "line" : 201,
             "column" : 8,
             "source_fragment" : "hdr.kvsQuery.key = hdr.kvsQuery.key + 1"
           }
@@ -4662,8 +4663,8 @@
       ]
     },
     {
-      "name" : "MyIngress.setPong",
-      "id" : 9,
+      "name" : "act",
+      "id" : 8,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -4680,16 +4681,16 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 204,
-            "column" : 8,
+            "line" : 241,
+            "column" : 16,
             "source_fragment" : "hdr.kvsQuery.pingPong = 2"
           }
         }
       ]
     },
     {
-      "name" : "act",
-      "id" : 10,
+      "name" : "act_0",
+      "id" : 9,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -4706,7 +4707,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 249,
+            "line" : 238,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.padding = 1"
           }
@@ -4725,7 +4726,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 250,
+            "line" : 239,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.switchID = 2"
           }
@@ -4733,8 +4734,8 @@
       ]
     },
     {
-      "name" : "act_0",
-      "id" : 11,
+      "name" : "act_1",
+      "id" : 10,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -4747,7 +4748,7 @@
           ],
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 255,
+            "line" : 247,
             "column" : 14,
             "source_fragment" : "recirculate(meta)"
           }
@@ -4761,56 +4762,18 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 164,
+        "line" : 166,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
       "init_table" : "node_2",
       "tables" : [
         {
-          "name" : "MyIngress.Forwarding",
+          "name" : "MyIngress.Ops",
           "id" : 0,
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 207,
-            "column" : 10,
-            "source_fragment" : "Forwarding"
-          },
-          "key" : [
-            {
-              "match_type" : "lpm",
-              "name" : "hdr.ipv4.dstAddr",
-              "target" : ["ipv4", "dstAddr"],
-              "mask" : null
-            }
-          ],
-          "match_type" : "lpm",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [4, 3, 0],
-          "actions" : ["MyIngress.drop", "MyIngress.set_nhop", "NoAction"],
-          "base_default_next" : "MyIngress.Ops",
-          "next_tables" : {
-            "MyIngress.drop" : "MyIngress.Ops",
-            "MyIngress.set_nhop" : "MyIngress.Ops",
-            "NoAction" : "MyIngress.Ops"
-          },
-          "default_entry" : {
-            "action_id" : 0,
-            "action_const" : false,
-            "action_data" : [],
-            "action_entry_const" : false
-          }
-        },
-        {
-          "name" : "MyIngress.Ops",
-          "id" : 1,
-          "source_info" : {
-            "filename" : "ms3-2.p4",
-            "line" : 221,
+            "line" : 219,
             "column" : 10,
             "source_fragment" : "Ops"
           },
@@ -4834,7 +4797,7 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [5, 6, 7, 8, 1],
+          "action_ids" : [4, 5, 6, 7, 1],
           "actions" : ["MyIngress.drop", "MyIngress.get", "MyIngress.put", "MyIngress.rangeGet", "NoAction"],
           "base_default_next" : "tbl_act",
           "next_tables" : {
@@ -4853,10 +4816,10 @@
         },
         {
           "name" : "tbl_act",
-          "id" : 2,
+          "id" : 1,
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 249,
+            "line" : 238,
             "column" : 33,
             "source_fragment" : "= 1; ..."
           },
@@ -4867,62 +4830,54 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [10],
-          "actions" : ["act"],
-          "base_default_next" : "MyIngress.Pong",
+          "action_ids" : [9],
+          "actions" : ["act_0"],
+          "base_default_next" : "node_5",
           "next_tables" : {
-            "act" : "MyIngress.Pong"
+            "act_0" : "node_5"
           },
           "default_entry" : {
-            "action_id" : 10,
+            "action_id" : 9,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
           }
         },
         {
-          "name" : "MyIngress.Pong",
-          "id" : 3,
+          "name" : "tbl_act_0",
+          "id" : 2,
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 236,
-            "column" : 10,
-            "source_fragment" : "Pong"
+            "line" : 241,
+            "column" : 38,
+            "source_fragment" : "="
           },
-          "key" : [
-            {
-              "match_type" : "exact",
-              "name" : "hdr.kvsQuery.pingPong",
-              "target" : ["kvsQuery", "pingPong"],
-              "mask" : null
-            }
-          ],
+          "key" : [],
           "match_type" : "exact",
           "type" : "simple",
           "max_size" : 1024,
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [9, 2],
-          "actions" : ["MyIngress.setPong", "NoAction"],
+          "action_ids" : [8],
+          "actions" : ["act"],
           "base_default_next" : "node_7",
           "next_tables" : {
-            "MyIngress.setPong" : "node_7",
-            "NoAction" : "node_7"
+            "act" : "node_7"
           },
           "default_entry" : {
-            "action_id" : 2,
-            "action_const" : false,
+            "action_id" : 8,
+            "action_const" : true,
             "action_data" : [],
-            "action_entry_const" : false
+            "action_entry_const" : true
           }
         },
         {
-          "name" : "tbl_act_0",
-          "id" : 4,
+          "name" : "tbl_act_1",
+          "id" : 3,
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 255,
+            "line" : 247,
             "column" : 14,
             "source_fragment" : "recirculate(meta)"
           },
@@ -4933,17 +4888,55 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [11],
-          "actions" : ["act_0"],
-          "base_default_next" : null,
+          "action_ids" : [10],
+          "actions" : ["act_1"],
+          "base_default_next" : "MyIngress.Forwarding",
           "next_tables" : {
-            "act_0" : null
+            "act_1" : "MyIngress.Forwarding"
           },
           "default_entry" : {
-            "action_id" : 11,
+            "action_id" : 10,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "MyIngress.Forwarding",
+          "id" : 4,
+          "source_info" : {
+            "filename" : "ms3-2.p4",
+            "line" : 205,
+            "column" : 10,
+            "source_fragment" : "Forwarding"
+          },
+          "key" : [
+            {
+              "match_type" : "lpm",
+              "name" : "hdr.ipv4.dstAddr",
+              "target" : ["ipv4", "dstAddr"],
+              "mask" : null
+            }
+          ],
+          "match_type" : "lpm",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [3, 2, 0],
+          "actions" : ["MyIngress.drop", "MyIngress.set_nhop", "NoAction"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "MyIngress.drop" : null,
+            "MyIngress.set_nhop" : null,
+            "NoAction" : null
+          },
+          "default_entry" : {
+            "action_id" : 0,
+            "action_const" : false,
+            "action_data" : [],
+            "action_entry_const" : false
           }
         }
       ],
@@ -4954,7 +4947,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 246,
+            "line" : 235,
             "column" : 9,
             "source_fragment" : "hdr.response[0].isValid()"
           },
@@ -4970,16 +4963,16 @@
             }
           },
           "false_next" : null,
-          "true_next" : "MyIngress.Forwarding"
+          "true_next" : "MyIngress.Ops"
         },
         {
-          "name" : "node_7",
+          "name" : "node_5",
           "id" : 1,
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 252,
+            "line" : 240,
             "column" : 16,
-            "source_fragment" : "hdr.kvsQuery.queryType == 2"
+            "source_fragment" : "hdr.kvsQuery.pingPong == 1"
           },
           "expression" : {
             "type" : "expression",
@@ -4987,23 +4980,69 @@
               "op" : "==",
               "left" : {
                 "type" : "field",
-                "value" : ["kvsQuery", "queryType"]
+                "value" : ["kvsQuery", "pingPong"]
               },
               "right" : {
                 "type" : "hexstr",
-                "value" : "0x02"
+                "value" : "0x01"
               }
             }
           },
-          "false_next" : null,
-          "true_next" : "node_8"
+          "true_next" : "tbl_act_0",
+          "false_next" : "node_7"
         },
         {
-          "name" : "node_8",
+          "name" : "node_7",
           "id" : 2,
           "source_info" : {
             "filename" : "ms3-2.p4",
-            "line" : 253,
+            "line" : 244,
+            "column" : 16,
+            "source_fragment" : "hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.pingPong != 2"
+          },
+          "expression" : {
+            "type" : "expression",
+            "value" : {
+              "op" : "and",
+              "left" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["kvsQuery", "queryType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x02"
+                  }
+                }
+              },
+              "right" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "!=",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["kvsQuery", "pingPong"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x02"
+                  }
+                }
+              }
+            }
+          },
+          "true_next" : "node_8",
+          "false_next" : "MyIngress.Forwarding"
+        },
+        {
+          "name" : "node_8",
+          "id" : 3,
+          "source_info" : {
+            "filename" : "ms3-2.p4",
+            "line" : 245,
             "column" : 17,
             "source_fragment" : "hdr.kvsQuery.key < hdr.kvsQuery.key2"
           },
@@ -5021,8 +5060,8 @@
               }
             }
           },
-          "false_next" : null,
-          "true_next" : "tbl_act_0"
+          "true_next" : "tbl_act_1",
+          "false_next" : "MyIngress.Forwarding"
         }
       ]
     },
@@ -5031,7 +5070,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 286,
+        "line" : 279,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -5047,7 +5086,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms3-2.p4",
-        "line" : 298,
+        "line" : 291,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -5097,16 +5136,24 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
+      "intrinsic_metadata.lf_field_list",
+      ["standard_metadata", "lf_field_list"]
+    ],
+    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.resubmit_flag",
+      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.priority",
-      ["standard_metadata", "priority"]
+      "intrinsic_metadata.recirculate_flag",
+      ["standard_metadata", "recirculate_flag"]
     ]
   ],
   "program" : "ms3-2.p4",

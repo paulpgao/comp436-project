@@ -1,10 +1,10 @@
 
-[2020-11-12 09:49:03.144] /p4.v1.P4Runtime/SetForwardingPipelineConfig
+[2020-11-14 05:49:40.064] /p4.v1.P4Runtime/SetForwardingPipelineConfig
 ---
-Message too long (145393 bytes)! Skipping log...
+Message too long (146427 bytes)! Skipping log...
 ---
 
-[2020-11-12 09:49:03.207] /p4.v1.P4Runtime/Write
+[2020-11-14 05:49:40.141] /p4.v1.P4Runtime/Write
 ---
 device_id: 2
 election_id {
@@ -26,7 +26,7 @@ updates {
 }
 ---
 
-[2020-11-12 09:49:03.221] /p4.v1.P4Runtime/Write
+[2020-11-14 05:49:40.149] /p4.v1.P4Runtime/Write
 ---
 device_id: 2
 election_id {
@@ -59,7 +59,7 @@ updates {
 }
 ---
 
-[2020-11-12 09:49:03.237] /p4.v1.P4Runtime/Write
+[2020-11-14 05:49:40.155] /p4.v1.P4Runtime/Write
 ---
 device_id: 2
 election_id {
@@ -92,7 +92,7 @@ updates {
 }
 ---
 
-[2020-11-12 09:49:03.246] /p4.v1.P4Runtime/Write
+[2020-11-14 05:49:40.162] /p4.v1.P4Runtime/Write
 ---
 device_id: 2
 election_id {
@@ -125,7 +125,7 @@ updates {
 }
 ---
 
-[2020-11-12 09:49:03.256] /p4.v1.P4Runtime/Write
+[2020-11-14 05:49:40.170] /p4.v1.P4Runtime/Write
 ---
 device_id: 2
 election_id {
@@ -161,34 +161,7 @@ updates {
 }
 ---
 
-[2020-11-12 09:49:03.262] /p4.v1.P4Runtime/Write
----
-device_id: 2
-election_id {
-  low: 1
-}
-updates {
-  type: INSERT
-  entity {
-    table_entry {
-      table_id: 33605580
-      match {
-        field_id: 1
-        exact {
-          value: "\001"
-        }
-      }
-      action {
-        action {
-          action_id: 16842025
-        }
-      }
-    }
-  }
-}
----
-
-[2020-11-12 09:49:03.264] /p4.v1.P4Runtime/Write
+[2020-11-14 05:49:40.195] /p4.v1.P4Runtime/Write
 ---
 device_id: 2
 election_id {

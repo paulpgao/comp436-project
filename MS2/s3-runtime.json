@@ -43,17 +43,6 @@
       "action_name": "MyIngress.rangeGet",
       "action_params": {
       }
-    },
-    {
-      "table": "MyIngress.Forwarding",
-      "match": {
-        "hdr.ipv4.dstAddr": ["10.0.1.1", 32]
-      },
-      "action_name": "MyIngress.set_nhop",
-      "action_params": {
-        "nhop_ipv4": "10.0.1.1",
-        "port" : 1
-      }
     }
   ]
 }

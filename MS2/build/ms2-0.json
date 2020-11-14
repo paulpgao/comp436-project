@@ -25,7 +25,10 @@
         ["ingress_port", 9, false],
         ["egress_spec", 9, false],
         ["egress_port", 9, false],
+        ["clone_spec", 32, false],
         ["instance_type", 32, false],
+        ["drop", 1, false],
+        ["recirculate_port", 16, false],
         ["packet_length", 32, false],
         ["enq_timestamp", 32, false],
         ["enq_qdepth", 19, false],
@@ -33,12 +36,14 @@
         ["deq_qdepth", 19, false],
         ["ingress_global_timestamp", 48, false],
         ["egress_global_timestamp", 48, false],
+        ["lf_field_list", 32, false],
         ["mcast_grp", 16, false],
+        ["resubmit_flag", 32, false],
         ["egress_rid", 16, false],
         ["checksum_error", 1, false],
+        ["recirculate_flag", 32, false],
         ["parser_error", 32, false],
-        ["priority", 3, false],
-        ["_padding", 3, false]
+        ["_padding", 5, false]
       ]
     },
     {
@@ -7550,7 +7555,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms2-0.p4",
-        "line" : 291,
+        "line" : 290,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -7603,7 +7608,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms2-0.p4",
-        "line" : 268,
+        "line" : 267,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -8251,6 +8256,160 @@
       "runtime_data" : [],
       "primitives" : [
         {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "pingPong"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x03"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms2-0.p4",
+            "line" : 230,
+            "column" : 24,
+            "source_fragment" : "hdr.kvsQuery.pingPong = 3"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_8",
+      "id" : 9,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["kvsQuery", "pingPong"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x03"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms2-0.p4",
+            "line" : 234,
+            "column" : 24,
+            "source_fragment" : "hdr.kvsQuery.pingPong = 3"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_9",
+      "id" : 10,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.requestCounts"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000001"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms2-0.p4",
+            "line" : 236,
+            "column" : 20,
+            "source_fragment" : "requestCounts.write(1, 0)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_10",
+      "id" : 11,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_2"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "numRequest_1"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms2-0.p4",
+            "line" : 239,
+            "column" : 43,
+            "source_fragment" : "numRequest + 1"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "MyIngress.requestCounts"
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x00000001"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp_2"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "ms2-0.p4",
+            "line" : 239,
+            "column" : 20,
+            "source_fragment" : "requestCounts.write(1, numRequest + 1)"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act_11",
+      "id" : 12,
+      "runtime_data" : [],
+      "primitives" : [
+        {
           "op" : "register_read",
           "parameters" : [
             {
@@ -8368,160 +8527,6 @@
       ]
     },
     {
-      "name" : "act_8",
-      "id" : 9,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["kvsQuery", "pingPong"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x03"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms2-0.p4",
-            "line" : 231,
-            "column" : 24,
-            "source_fragment" : "hdr.kvsQuery.pingPong = 3"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "act_9",
-      "id" : 10,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["kvsQuery", "pingPong"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x03"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms2-0.p4",
-            "line" : 235,
-            "column" : 24,
-            "source_fragment" : "hdr.kvsQuery.pingPong = 3"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "act_10",
-      "id" : 11,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "register_write",
-          "parameters" : [
-            {
-              "type" : "register_array",
-              "value" : "MyIngress.requestCounts"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000001"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000000"
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms2-0.p4",
-            "line" : 237,
-            "column" : 20,
-            "source_fragment" : "requestCounts.write(1, 0)"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "act_11",
-      "id" : 12,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_2"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "+",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["scalars", "numRequest_1"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x00000001"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xffffffff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms2-0.p4",
-            "line" : 240,
-            "column" : 43,
-            "source_fragment" : "numRequest + 1"
-          }
-        },
-        {
-          "op" : "register_write",
-          "parameters" : [
-            {
-              "type" : "register_array",
-              "value" : "MyIngress.requestCounts"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000001"
-            },
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_2"]
-            }
-          ],
-          "source_info" : {
-            "filename" : "ms2-0.p4",
-            "line" : 240,
-            "column" : 20,
-            "source_fragment" : "requestCounts.write(1, numRequest + 1)"
-          }
-        }
-      ]
-    },
-    {
       "name" : "act_12",
       "id" : 13,
       "runtime_data" : [],
@@ -8540,7 +8545,7 @@
           ],
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 242,
+            "line" : 241,
             "column" : 16,
             "source_fragment" : "standard_metadata.egress_spec = 1"
           }
@@ -8566,7 +8571,7 @@
           ],
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 257,
+            "line" : 256,
             "column" : 12,
             "source_fragment" : "hdr.kvsQuery.pingPong = 1"
           }
@@ -8776,14 +8781,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [8],
-          "actions" : ["act_7"],
+          "action_ids" : [12],
+          "actions" : ["act_11"],
           "base_default_next" : "node_15",
           "next_tables" : {
-            "act_7" : "node_15"
+            "act_11" : "node_15"
           },
           "default_entry" : {
-            "action_id" : 8,
+            "action_id" : 12,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -8807,9 +8812,9 @@
           "direct_meters" : null,
           "action_ids" : [6],
           "actions" : ["act_5"],
-          "base_default_next" : "node_20",
+          "base_default_next" : "tbl_act_12",
           "next_tables" : {
-            "act_5" : "node_20"
+            "act_5" : "tbl_act_12"
           },
           "default_entry" : {
             "action_id" : 6,
@@ -8836,9 +8841,9 @@
           "direct_meters" : null,
           "action_ids" : [7],
           "actions" : ["act_6"],
-          "base_default_next" : "node_20",
+          "base_default_next" : "tbl_act_12",
           "next_tables" : {
-            "act_6" : "node_20"
+            "act_6" : "tbl_act_12"
           },
           "default_entry" : {
             "action_id" : 7,
@@ -8852,7 +8857,36 @@
           "id" : 9,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 231,
+            "line" : 230,
+            "column" : 46,
+            "source_fragment" : "="
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [8],
+          "actions" : ["act_7"],
+          "base_default_next" : "node_23",
+          "next_tables" : {
+            "act_7" : "node_23"
+          },
+          "default_entry" : {
+            "action_id" : 8,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_9",
+          "id" : 10,
+          "source_info" : {
+            "filename" : "ms2-0.p4",
+            "line" : 234,
             "column" : 46,
             "source_fragment" : "="
           },
@@ -8865,41 +8899,12 @@
           "direct_meters" : null,
           "action_ids" : [9],
           "actions" : ["act_8"],
-          "base_default_next" : "node_23",
+          "base_default_next" : "tbl_act_10",
           "next_tables" : {
-            "act_8" : "node_23"
+            "act_8" : "tbl_act_10"
           },
           "default_entry" : {
             "action_id" : 9,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_act_9",
-          "id" : 10,
-          "source_info" : {
-            "filename" : "ms2-0.p4",
-            "line" : 235,
-            "column" : 46,
-            "source_fragment" : "="
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [10],
-          "actions" : ["act_9"],
-          "base_default_next" : "tbl_act_10",
-          "next_tables" : {
-            "act_9" : "tbl_act_10"
-          },
-          "default_entry" : {
-            "action_id" : 10,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -8910,9 +8915,38 @@
           "id" : 11,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 237,
+            "line" : 236,
             "column" : 20,
             "source_fragment" : "requestCounts.write(1, 0)"
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [10],
+          "actions" : ["act_9"],
+          "base_default_next" : "tbl_act_12",
+          "next_tables" : {
+            "act_9" : "tbl_act_12"
+          },
+          "default_entry" : {
+            "action_id" : 10,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_act_11",
+          "id" : 12,
+          "source_info" : {
+            "filename" : "ms2-0.p4",
+            "line" : 239,
+            "column" : 20,
+            "source_fragment" : "requestCounts.write(1, numRequest + 1)"
           },
           "key" : [],
           "match_type" : "exact",
@@ -8935,40 +8969,11 @@
           }
         },
         {
-          "name" : "tbl_act_11",
-          "id" : 12,
-          "source_info" : {
-            "filename" : "ms2-0.p4",
-            "line" : 240,
-            "column" : 20,
-            "source_fragment" : "requestCounts.write(1, numRequest + 1)"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [12],
-          "actions" : ["act_11"],
-          "base_default_next" : "tbl_act_12",
-          "next_tables" : {
-            "act_11" : "tbl_act_12"
-          },
-          "default_entry" : {
-            "action_id" : 12,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
           "name" : "tbl_act_12",
           "id" : 13,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 242,
+            "line" : 241,
             "column" : 46,
             "source_fragment" : "="
           },
@@ -9264,15 +9269,15 @@
             }
           },
           "true_next" : "tbl_act_7",
-          "false_next" : "node_20"
+          "false_next" : "tbl_act_12"
         },
         {
           "name" : "node_20",
           "id" : 9,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 228,
-            "column" : 20,
+            "line" : 227,
+            "column" : 27,
             "source_fragment" : "numRequest == 14"
           },
           "expression" : {
@@ -9297,14 +9302,14 @@
           "id" : 10,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 229,
+            "line" : 228,
             "column" : 24,
-            "source_fragment" : "pingCount1 - pongCount1 > 10"
+            "source_fragment" : "pingCount1 - pongCount1 < 10"
           },
           "expression" : {
             "type" : "expression",
             "value" : {
-              "op" : ">",
+              "op" : "<",
               "left" : {
                 "type" : "expression",
                 "value" : {
@@ -9343,14 +9348,14 @@
           "id" : 11,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 233,
+            "line" : 232,
             "column" : 24,
-            "source_fragment" : "pingCount2 - pongCount2 > 10"
+            "source_fragment" : "pingCount2 - pongCount2 < 10"
           },
           "expression" : {
             "type" : "expression",
             "value" : {
-              "op" : ">",
+              "op" : "<",
               "left" : {
                 "type" : "expression",
                 "value" : {
@@ -9391,7 +9396,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "ms2-0.p4",
-        "line" : 252,
+        "line" : 251,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -9402,7 +9407,7 @@
           "id" : 14,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 257,
+            "line" : 256,
             "column" : 34,
             "source_fragment" : "="
           },
@@ -9434,7 +9439,7 @@
           "id" : 12,
           "source_info" : {
             "filename" : "ms2-0.p4",
-            "line" : 256,
+            "line" : 255,
             "column" : 12,
             "source_fragment" : "standard_metadata.instance_type == 1"
           },
@@ -9464,7 +9469,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "ms2-0.p4",
-        "line" : 268,
+        "line" : 267,
         "column" : 1,
         "source_fragment" : "update_checksum( ..."
       },
@@ -9514,16 +9519,24 @@
       ["standard_metadata", "egress_global_timestamp"]
     ],
     [
+      "intrinsic_metadata.lf_field_list",
+      ["standard_metadata", "lf_field_list"]
+    ],
+    [
       "intrinsic_metadata.mcast_grp",
       ["standard_metadata", "mcast_grp"]
+    ],
+    [
+      "intrinsic_metadata.resubmit_flag",
+      ["standard_metadata", "resubmit_flag"]
     ],
     [
       "intrinsic_metadata.egress_rid",
       ["standard_metadata", "egress_rid"]
     ],
     [
-      "intrinsic_metadata.priority",
-      ["standard_metadata", "priority"]
+      "intrinsic_metadata.recirculate_flag",
+      ["standard_metadata", "recirculate_flag"]
     ]
   ],
   "program" : "ms2-0.p4",

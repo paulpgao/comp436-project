@@ -67,12 +67,14 @@ header kvsQuery_t {
     bit<32> key;
     bit<32> key2;
     bit<32> value;
+    bit<32> upperBound;
     bit<32> clientID;
     bit<2> switchID;
     bit<2> pingPong; //0: normal packet, 1: ping packet, 2: pong packet, 3: failure indicator
     bit<2> queryType;
     bit<2> padding;
-    bit<8> readWriteAccess; // 0: all access, 1: no read access, 2: no write access
+    bit<7> readWriteAccess; // 0: all access, 1: no read access, 2: no write access
+    bit<1> rateLimitReached;
 }
 
 header response_t {
@@ -199,10 +201,6 @@ control MyIngress(inout headers hdr,
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
         // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
-
-    action setPong() {
-        hdr.kvsQuery.pingPong = 2;
-    }
     
     table Forwarding {
         key = {
@@ -233,28 +231,23 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
-    table Pong {
-        key = {
-            hdr.kvsQuery.pingPong : exact;
-        }
-        actions = {
-            setPong;
-        }
-    }
-
     apply {
     	if (hdr.response[0].isValid()) {
-            Forwarding.apply();          
+                      
             Ops.apply();
             hdr.kvsQuery.padding = 1;
             hdr.kvsQuery.switchID = 2;
-            Pong.apply();
-            if (hdr.kvsQuery.queryType == 2) {
+            if (hdr.kvsQuery.pingPong == 1) {
+                hdr.kvsQuery.pingPong = 2;
+            }
+            
+            if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.pingPong != 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
             		// clone(CloneType.I2E, 1);
             		recirculate(meta);
             	}
             }
+            Forwarding.apply();
 
             // if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
             //     // Normal packet

@@ -198,16 +198,6 @@ control MyIngress(inout headers hdr,
         // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
     
-    table Forwarding {
-        key = {
-            hdr.ipv4.dstAddr: lpm;
-        }
-        actions = {
-            drop;
-            set_nhop;
-        }
-    }
-
     // 0: GET
     // 1: PUT
     // 2: RANGE
@@ -228,10 +218,6 @@ control MyIngress(inout headers hdr,
 
     apply {
     	if (hdr.response[0].isValid()) {
-            // Only if a switch has failed (bonus that we did not implement), then forward
-            if (hdr.kvsQuery.switchID == 3) {
-                Forwarding.apply();
-            }
             Ops.apply();
             hdr.kvsQuery.padding = 1;
             hdr.kvsQuery.switchID = 3;

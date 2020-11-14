@@ -23,12 +23,14 @@ class KVSQuery(Packet):
                 IntField("key", 0),
                 IntField("key2", 0),
                 IntField("value", 0),
+                IntField("upperBound", 0),
                 IntField("clientID", 0),
                 BitField("switchID", 0, 2),                
                 BitField("pingPong", 0, 2),
                 BitField("queryType", 0, 2),
                 BitField("padding", 0, 2),
-                BitField("readWriteAccess", 0, 8)]
+                BitField("readWriteAccess", 0, 7),
+                BitField("rateLimitReached", 0, 1)]
 
 class Response(Packet):
     name = "Response"
@@ -69,7 +71,7 @@ def splitRange(addr, iface, lower, upper, size = 10):
     while i < upper - size:
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)
-        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=2, key=i, key2=i+size, clientID = 0)
+        pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=2, key=i, key2=i+size, upperBound=upper, clientID = 0)
         # for j in range(4):
         #     pkt = pkt / Response(nextType = 0)
         pkt = pkt / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
@@ -79,7 +81,7 @@ def splitRange(addr, iface, lower, upper, size = 10):
 
     pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
     pkt = pkt / Response(nextType = 1)
-    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, key=i, key2=upper, queryType=2, clientID = 0)
+    pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, key=i, key2=upper, upperBound=upper, queryType=2, clientID = 0)
     # for j in range(i, upper - 1):
     #      pkt = pkt / Response(nextType = 0)
     pkt = pkt / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
@@ -102,6 +104,9 @@ def main():
         if len(sys.argv) < 3:
             print 'pass 1 more argument:"<key>"'
             exit(1)
+        if int(sys.argv[2]) > 1025 or int(sys.argv[2]) < 0:
+            print 'invalid value'
+            exit(1)
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)
         pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=0, key=int(sys.argv[2]), clientID = 0) / TCP(dport=1234, sport=random.randint(49152,65535)) / "get"
@@ -109,6 +114,9 @@ def main():
     elif sys.argv[1] == "put":
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<key>" "<value>"'
+            exit(1)
+        if int(sys.argv[2]) > 1025 or int(sys.argv[2]) < 0:
+            print 'invalid value'
             exit(1)
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)

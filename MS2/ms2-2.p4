@@ -198,10 +198,6 @@ control MyIngress(inout headers hdr,
         // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
 
-    action setPong() {
-        hdr.kvsQuery.pingPong = 2;
-    }
-    
     table Forwarding {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -231,28 +227,17 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
-    table Pong {
-        key = {
-            hdr.kvsQuery.pingPong : exact;
-        }
-        actions = {
-            setPong;
-        }
-    }
-
     apply {
     	if (hdr.response[0].isValid()) {
             
             Ops.apply();
             hdr.kvsQuery.padding = 1;
             hdr.kvsQuery.switchID = 2;
-            Pong.apply();
-            //hdr.kvsQuery.pingPong = 2;
-            // TODO: always send pong for now
-            // if (hdr.kvsQuery.pingPong == 1) {
-            //     hdr.kvsQuery.pingPong = 2;
-            // }
-            if (hdr.kvsQuery.queryType == 2) {
+            if (hdr.kvsQuery.pingPong == 1) {
+                hdr.kvsQuery.pingPong = 2;
+            }
+            
+            if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.pingPong != 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
             		// clone(CloneType.I2E, 1);
             		recirculate(meta);

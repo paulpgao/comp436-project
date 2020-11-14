@@ -98,5 +98,20 @@ registers {
   }
   size: 2
 }
+registers {
+  preamble {
+    id: 369129213
+    name: "MyIngress.rateLimitRequests"
+    alias: "rateLimitRequests"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 2
+}
 type_info {
 }
