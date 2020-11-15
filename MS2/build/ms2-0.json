@@ -9304,12 +9304,12 @@
             "filename" : "ms2-0.p4",
             "line" : 228,
             "column" : 24,
-            "source_fragment" : "pingCount1 - pongCount1 < 10"
+            "source_fragment" : "pingCount1 - pongCount1 > 10"
           },
           "expression" : {
             "type" : "expression",
             "value" : {
-              "op" : "<",
+              "op" : ">",
               "left" : {
                 "type" : "expression",
                 "value" : {
@@ -9350,12 +9350,12 @@
             "filename" : "ms2-0.p4",
             "line" : 232,
             "column" : 24,
-            "source_fragment" : "pingCount2 - pongCount2 < 10"
+            "source_fragment" : "pingCount2 - pongCount2 > 10"
           },
           "expression" : {
             "type" : "expression",
             "value" : {
-              "op" : "<",
+              "op" : ">",
               "left" : {
                 "type" : "expression",
                 "value" : {

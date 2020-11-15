@@ -30,7 +30,7 @@ class KVSQuery(Packet):
                 BitField("queryType", 0, 2),
                 BitField("padding", 0, 2),
                 BitField("readWriteAccess", 0, 7),
-                BitField("rateLimitsReached", 0, 1)]
+                BitField("rateLimitReached", 0, 1)]
 
 class Response(Packet):
     name = "Response"

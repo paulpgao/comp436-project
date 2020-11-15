@@ -10407,7 +10407,7 @@
             "filename" : "ms3-0.p4",
             "line" : 216,
             "column" : 20,
-            "source_fragment" : "numAliceRequests == 9"
+            "source_fragment" : "numAliceRequests == 50"
           },
           "expression" : {
             "type" : "expression",
@@ -10419,7 +10419,7 @@
               },
               "right" : {
                 "type" : "hexstr",
-                "value" : "0x00000009"
+                "value" : "0x00000032"
               }
             }
           },
@@ -10479,7 +10479,7 @@
             "filename" : "ms3-0.p4",
             "line" : 229,
             "column" : 20,
-            "source_fragment" : "numBobRequests == 9"
+            "source_fragment" : "numBobRequests == 100"
           },
           "expression" : {
             "type" : "expression",
@@ -10491,7 +10491,7 @@
               },
               "right" : {
                 "type" : "hexstr",
-                "value" : "0x00000009"
+                "value" : "0x00000064"
               }
             }
           },

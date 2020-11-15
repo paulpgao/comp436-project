@@ -225,7 +225,7 @@ control MyIngress(inout headers hdr,
             if (hdr.kvsQuery.pingPong == 1) {
                 hdr.kvsQuery.pingPong = 2;
             }
-            if (hdr.kvsQuery.queryType == 2) {
+            if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.pingPong != 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
             		// clone(CloneType.I2E, 1);
             		recirculate(meta);

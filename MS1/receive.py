@@ -21,6 +21,7 @@ class KVSQuery(Packet):
                 IntField("key", 0),
                 IntField("key2", 0),
                 IntField("value", 0),
+                IntField("versionNum", 0),
                 BitField("switchID", 0, 2),                
                 BitField("pingPong", 0, 2),
                 BitField("queryType", 0, 2),

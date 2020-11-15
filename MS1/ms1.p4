@@ -67,6 +67,7 @@ header kvsQuery_t {
     bit<32> key;
     bit<32> key2;
     bit<32> value;
+    bit<32> versionNum;
     bit<2> switchID;
     bit<2> pingPong;
     bit<2> queryType;
@@ -163,8 +164,9 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    register <bit<32>>(1025) database;
+    register <bit<32>>(6150) database;
     register <bit<1>>(1025) isFilled;
+    register <bit<32>>(1025) latestVersion;
 
     // Setting the egress port and IP destination.
     action set_nhop(bit<32> nhop_ipv4, bit<9> port) {
@@ -178,21 +180,26 @@ control MyIngress(inout headers hdr,
     }
 
     action get() {
+        bit<32> versionNum = hdr.kvsQuery.versionNum;
         // database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
-        // isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
-        database.read(hdr.response[0].value, hdr.kvsQuery.key);
+        // isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);{
+        database.read(hdr.response[0].value, hdr.kvsQuery.key + 1025 * versionNum);
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
     }
 
     action put() {
-        database.write(hdr.kvsQuery.key, hdr.kvsQuery.value);
+        bit<32> versionNum = 0;
+        latestVersion.read(versionNum, hdr.kvsQuery.key);
+        database.write(hdr.kvsQuery.key + 1025 * versionNum, hdr.kvsQuery.value);
+        latestVersion.write(hdr.kvsQuery.key, versionNum + 1);
         isFilled.write(hdr.kvsQuery.key, 1);
     }
 
     action rangeGet() {
+        bit<32> versionNum = hdr.kvsQuery.versionNum;
         hdr.response.push_front(1);
         hdr.response[0].setValid();
-		database.read(hdr.response[0].value, hdr.kvsQuery.key);
+        database.read(hdr.response[0].value, hdr.kvsQuery.key + 1025 * versionNum);
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
         // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
@@ -231,6 +238,15 @@ control MyIngress(inout headers hdr,
             Forwarding.apply();
             Ops.apply();
             hdr.kvsQuery.padding = 1;
+            // Cap the version number to 5
+            if (hdr.kvsQuery.queryType == 1) {
+                bit<32> versionNum = 0;
+                latestVersion.read(versionNum, hdr.kvsQuery.key);
+                if (versionNum > 5) {
+                    latestVersion.write(hdr.kvsQuery.key, 5);
+                }
+            }
+            // Recirculate for range requests
             if (hdr.kvsQuery.queryType == 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
             		// clone(CloneType.I2E, 1);

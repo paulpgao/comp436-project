@@ -99,7 +99,7 @@ def handle_pkt(pkt):
 
         if pkt[KVSQuery].readWriteAccess == 1:
             if pkt[KVSQuery].queryType == 2 and pkt[KVSQuery].key2 == pkt[KVSQuery].upperBound:
-                print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access in the full given range"
+                print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access at one or more keys in the given range"
             elif pkt[KVSQuery].queryType != 2:
                 print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access at key " + str(pkt[KVSQuery].key)
             return

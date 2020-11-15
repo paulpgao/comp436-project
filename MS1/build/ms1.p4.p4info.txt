@@ -120,7 +120,7 @@ registers {
       }
     }
   }
-  size: 1025
+  size: 6150
 }
 registers {
   preamble {
@@ -132,6 +132,21 @@ registers {
     bitstring {
       bit {
         bitwidth: 1
+      }
+    }
+  }
+  size: 1025
+}
+registers {
+  preamble {
+    id: 369121471
+    name: "MyIngress.latestVersion"
+    alias: "latestVersion"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
       }
     }
   }

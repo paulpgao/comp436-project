@@ -8201,19 +8201,39 @@
             "filename" : "ms2-3.p4",
             "line" : 228,
             "column" : 16,
-            "source_fragment" : "hdr.kvsQuery.queryType == 2"
+            "source_fragment" : "hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.pingPong != 2"
           },
           "expression" : {
             "type" : "expression",
             "value" : {
-              "op" : "==",
+              "op" : "and",
               "left" : {
-                "type" : "field",
-                "value" : ["kvsQuery", "queryType"]
+                "type" : "expression",
+                "value" : {
+                  "op" : "==",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["kvsQuery", "queryType"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x02"
+                  }
+                }
               },
               "right" : {
-                "type" : "hexstr",
-                "value" : "0x02"
+                "type" : "expression",
+                "value" : {
+                  "op" : "!=",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["kvsQuery", "pingPong"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x02"
+                  }
+                }
               }
             }
           },
