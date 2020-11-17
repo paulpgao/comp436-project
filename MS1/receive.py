@@ -93,7 +93,10 @@ def handle_pkt(pkt):
             else:
                 print pkt[Response].value  
         elif pkt[KVSQuery].queryType == 1:
-            print 'Value stored.'
+            if pkt[Response].isNull == 1:
+                print "Unable to store value. Too many versions."
+            else:
+                print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:
             for layer in reversed(list(get_packet_layers(pkt))):
                 if layer.name == "Response" and layer.nextType == 0:

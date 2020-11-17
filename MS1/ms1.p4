@@ -164,7 +164,7 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
 
-    register <bit<32>>(6150) database;
+    register <bit<32>>(7175) database;
     register <bit<1>>(1025) isFilled;
     register <bit<32>>(1025) latestVersion;
 
@@ -187,7 +187,7 @@ control MyIngress(inout headers hdr,
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
         bit<32> latest = 0;
         latestVersion.read(latest, hdr.kvsQuery.key);
-        if (hdr.kvsQuery.versionNum > 5 || hdr.kvsQuery.versionNum > latest - 1) {
+        if (hdr.kvsQuery.versionNum > latest - 1) {
             hdr.response[0].isNull = 0;
         }
     }
@@ -196,7 +196,6 @@ control MyIngress(inout headers hdr,
         bit<32> versionNum = 0;
         latestVersion.read(versionNum, hdr.kvsQuery.key);
         database.write(hdr.kvsQuery.key + 1025 * versionNum, hdr.kvsQuery.value);
-        latestVersion.write(hdr.kvsQuery.key, versionNum + 1);
         isFilled.write(hdr.kvsQuery.key, 1);
     }
 
@@ -208,7 +207,7 @@ control MyIngress(inout headers hdr,
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
         bit<32> latest = 0;
         latestVersion.read(latest, hdr.kvsQuery.key);
-        if (hdr.kvsQuery.versionNum > 5 || hdr.kvsQuery.versionNum > latest - 1) {
+        if (hdr.kvsQuery.versionNum > latest - 1) {
             hdr.response[0].isNull = 0;
         }
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
@@ -252,8 +251,10 @@ control MyIngress(inout headers hdr,
             if (hdr.kvsQuery.queryType == 1) {
                 bit<32> versionNum = 0;
                 latestVersion.read(versionNum, hdr.kvsQuery.key);
-                if (versionNum > 5) {
-                    latestVersion.write(hdr.kvsQuery.key, 5);
+                if (versionNum <= 5) {
+                    latestVersion.write(hdr.kvsQuery.key, versionNum + 1);
+                } else {
+                    hdr.response[0].isNull = 1;
                 }
             }
             // Recirculate for range requests
