@@ -6,6 +6,9 @@ import random
 import struct
 import string
 import time
+import logging
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 from scapy.all import sendp, send, get_if_list, get_if_hwaddr
 from scapy.all import Packet
@@ -72,7 +75,7 @@ def splitRange(addr, iface, lower, upper, size = 10):
         #     pkt = pkt / Response(nextType = 0)
         pkt = pkt / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
         sendp(pkt, iface=iface, verbose=False)
-        print (i, "to", i + size)
+        # print (i, "to", i + size)
         i += size
 
     pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
@@ -82,7 +85,7 @@ def splitRange(addr, iface, lower, upper, size = 10):
     #      pkt = pkt / Response(nextType = 0)
     pkt = pkt / TCP(dport=1234, sport=random.randint(49152,65535)) / "range"
     sendp(pkt, iface=iface, verbose=False)
-    print (i, "to", upper)
+    # print (i, "to", upper)
 
 def main():
     # if len(sys.argv)<3:

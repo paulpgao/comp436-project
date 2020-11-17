@@ -2,6 +2,9 @@
 import sys
 import struct
 import os
+import logging
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 from scapy.all import sniff, sendp, hexdump, get_if_list, get_if_hwaddr
 from scapy.all import Packet, IPOption
@@ -91,7 +94,6 @@ def handle_pkt(pkt):
         # count += 1
         # print count
         # print pkt[KVSQuery].pingPong
-        # print pkt[KVSQuery].switchID
 
         if pkt[KVSQuery].pingPong == 2:
             print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
@@ -103,13 +105,16 @@ def handle_pkt(pkt):
             return
 
         if pkt[KVSQuery].queryType == 0:
+            print "Switch " + str(pkt[KVSQuery].switchID)
             if pkt[Response].isNull == 0:
                 print "NULL" # Replace with large number
             else:
                 print pkt[Response].value
         elif pkt[KVSQuery].queryType == 1:
+            print "Switch " + str(pkt[KVSQuery].switchID)
             print 'Value stored.'
         elif pkt[KVSQuery].queryType == 2:
+            print "Switch " + str(pkt[KVSQuery].switchID)
             #print pkt[KVSQuery].switchID
             for layer in reversed(list(get_packet_layers(pkt))):
                 if layer.name == "Response" and layer.nextType == 0:
@@ -119,7 +124,7 @@ def handle_pkt(pkt):
                         print layer.value
             #print pkt.summary()
         print "------------------------"
-
+        sys.stdout.flush()
 
 
 
