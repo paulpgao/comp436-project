@@ -185,6 +185,11 @@ control MyIngress(inout headers hdr,
         // isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);{
         database.read(hdr.response[0].value, hdr.kvsQuery.key + 1025 * versionNum);
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
+        bit<32> latest = 0;
+        latestVersion.read(latest, hdr.kvsQuery.key);
+        if (hdr.kvsQuery.versionNum > 5 || hdr.kvsQuery.versionNum > latest - 1) {
+            hdr.response[0].isNull = 0;
+        }
     }
 
     action put() {
