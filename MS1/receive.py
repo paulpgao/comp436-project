@@ -2,6 +2,9 @@
 import sys
 import struct
 import os
+import logging
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 from scapy.all import sniff, sendp, hexdump, get_if_list, get_if_hwaddr
 from scapy.all import Packet, IPOption
@@ -106,6 +109,7 @@ def handle_pkt(pkt):
                         print layer.value
             # print pkt.summary()
         print "------------------------"
+        sys.stdout.flush()
 
 
 
