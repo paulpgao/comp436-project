@@ -2,6 +2,9 @@
 import sys
 import struct
 import os
+import logging
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 from scapy.all import sniff, sendp, hexdump, get_if_list, get_if_hwaddr
 from scapy.all import Packet, IPOption
@@ -95,6 +98,7 @@ def handle_pkt(pkt):
         # print pkt[KVSQuery].key2
         if pkt[KVSQuery].rateLimitReached == 1:
             print "Error: Rate limit has been reached for Client " + str(pkt[KVSQuery].clientID)
+            sys.stdout.flush()
             return
 
         if pkt[KVSQuery].readWriteAccess == 1:
@@ -102,18 +106,23 @@ def handle_pkt(pkt):
                 print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access at one or more keys in the given range"
             elif pkt[KVSQuery].queryType != 2:
                 print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access at key " + str(pkt[KVSQuery].key)
+            sys.stdout.flush()
             return
         if pkt[KVSQuery].readWriteAccess == 2:
             print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no write access at key " + str(pkt[KVSQuery].key)
+            sys.stdout.flush()
             return
 
+        # Comment out ping/pongs for MS3 testing
         if pkt[KVSQuery].pingPong == 2:
-            print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
-            print "------------------------"
+            # print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
+            # print "------------------------"
+            sys.stdout.flush()
             return
         if pkt[KVSQuery].pingPong == 3:
-            print "Pings/pongs are not within bound. Failure: Switch " + str(pkt[KVSQuery].switchID)
-            print "------------------------"
+            # print "Pings/pongs are not within bound. Failure: Switch " + str(pkt[KVSQuery].switchID)
+            # print "------------------------"
+            sys.stdout.flush()
             return
 
         if pkt[KVSQuery].queryType == 0:
@@ -133,6 +142,7 @@ def handle_pkt(pkt):
                         print layer.value
             #print pkt.summary()
         print "------------------------"
+        sys.stdout.flush()
 
 
 
