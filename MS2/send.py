@@ -118,7 +118,7 @@ def main():
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<key>" "<value>"'
             exit(1)
-        if int(sys.argv[2]) > 1025 or int(sys.argv[2]) < 0:
+        if int(sys.argv[2]) > 1024 or int(sys.argv[2]) < 0:
             print 'invalid value'
             exit(1)
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
@@ -138,12 +138,18 @@ def main():
         upper = 0
         lower = 0
         if sys.argv[2] == "g":
+            if int(sys.argv[3]) >= 1024:
+                print 'invalid value'
+                exit(1)
             upper = 1025
             lower = int(sys.argv[3]) + 1
         elif sys.argv[2] == "geq":
             upper = 1025
             lower = int(sys.argv[3])
         elif sys.argv[2] == "l":
+            if int(sys.argv[3]) <= 0:
+                print 'invalid value'
+                exit(1)
             upper = int(sys.argv[3])
             lower = 0
         elif sys.argv[2] == "leq":

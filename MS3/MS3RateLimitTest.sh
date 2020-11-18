@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Alice
+# Alice (50 rate limit)
 python sendA.py put 1024 1
 python sendA.py put 1023 1
 python sendA.py get 0
@@ -42,7 +42,7 @@ python sendA.py get 0
 python sendA.py get 0
 python sendA.py get 0
 
-# Bob
+# Bob (100 rate limit)
 python sendB.py get 0
 python sendB.py get 0
 python sendB.py get 0
