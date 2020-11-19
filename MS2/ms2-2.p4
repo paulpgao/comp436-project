@@ -195,8 +195,8 @@ control MyIngress(inout headers hdr,
         hdr.response.push_front(1);
         hdr.response[0].setValid();
         // Perform get operation
-        database.read(hdr.response[0].value, hdr.kvsQuery.key);
-        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
+        database.read(hdr.response[0].value, hdr.kvsQuery.key - 513);
+        isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key - 513);
         // Increment key for next recirculation
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
     }

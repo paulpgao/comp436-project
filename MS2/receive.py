@@ -81,7 +81,6 @@ def get_packet_layers(packet):
         counter += 1
 
 def handle_pkt(pkt):
-    global count
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
         # Display ping and pong packets to ensure they are sent correctly
         if pkt[KVSQuery].pingPong == 2:
