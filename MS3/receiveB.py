@@ -25,10 +25,14 @@ class KVSQuery(Packet):
                 IntField("key", 0),
                 IntField("key2", 0),
                 IntField("value", 0),
+                IntField("upperBound", 0),
+                IntField("clientID", 0),
                 BitField("switchID", 0, 2),                
                 BitField("pingPong", 0, 2),
                 BitField("queryType", 0, 2),
-                BitField("padding", 0, 2)]
+                BitField("padding", 0, 2),
+                BitField("readWriteAccess", 0, 7),
+                BitField("rateLimitReached", 0, 1)]
 
 # Packet used to return query results as a response header
 class Response(Packet):
@@ -81,31 +85,47 @@ def get_packet_layers(packet):
         counter += 1
 
 def handle_pkt(pkt):
-    global count
-    if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
-        # Display ping and pong packets to ensure they are sent correctly
+    if KVSQuery in pkt and pkt[KVSQuery].padding == 1 and pkt[KVSQuery].clientID == 1:
+        if pkt[KVSQuery].rateLimitReached == 1:
+            print "Error: Rate limit has been reached for Client " + str(pkt[KVSQuery].clientID)
+            sys.stdout.flush()
+            return
+
+        if pkt[KVSQuery].readWriteAccess == 1:
+            if pkt[KVSQuery].queryType == 2 and pkt[KVSQuery].key2 == pkt[KVSQuery].upperBound:
+                print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access at one or more keys in the given range"
+            elif pkt[KVSQuery].queryType != 2:
+                print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no read access at key " + str(pkt[KVSQuery].key)
+            sys.stdout.flush()
+            return
+        if pkt[KVSQuery].readWriteAccess == 2:
+            print "Access Denied: Client " + str(pkt[KVSQuery].clientID) + " has no write access at key " + str(pkt[KVSQuery].key)
+            sys.stdout.flush()
+            return
+
+        # Comment out ping/pongs for MS3 testing
         if pkt[KVSQuery].pingPong == 2:
             print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
-            print "------------------------"
+            # print "------------------------"
+            sys.stdout.flush()
             return
         if pkt[KVSQuery].pingPong == 3:
             print "Pings/pongs are not within bound. Failure: Switch " + str(pkt[KVSQuery].switchID)
-            print "------------------------"
+            # print "------------------------"
+            sys.stdout.flush()
             return
+
         # Display get request results
         if pkt[KVSQuery].queryType == 0:
-            print "Switch " + str(pkt[KVSQuery].switchID)
             if pkt[Response].isNull == 0:
-                print "NULL" # Replace with large number
+                print "NULL" 
             else:
                 print pkt[Response].value
         # Display put request results
         elif pkt[KVSQuery].queryType == 1:
-            print "Switch " + str(pkt[KVSQuery].switchID)
             print 'Value stored.'
         # Display range and select request results by reading each header stack layer
         elif pkt[KVSQuery].queryType == 2:
-            print "Switch " + str(pkt[KVSQuery].switchID)
             for layer in reversed(list(get_packet_layers(pkt))):
                 if layer.name == "Response" and layer.nextType == 0:
                     if layer.isNull == 0:
@@ -115,6 +135,7 @@ def handle_pkt(pkt):
             #print pkt.summary()
         print "------------------------"
         sys.stdout.flush()
+
 
 
 

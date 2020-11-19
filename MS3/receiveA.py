@@ -18,6 +18,7 @@ KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
 RESPONSE_PROTOCOL = 0x1234
 
+# Packet used to send request information for the query
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
@@ -33,6 +34,7 @@ class KVSQuery(Packet):
                 BitField("readWriteAccess", 0, 7),
                 BitField("rateLimitReached", 0, 1)]
 
+# Packet used to return query results as a response header
 class Response(Packet):
     name = "Response"
     fields_desc= [IntField("value", 0),
@@ -71,15 +73,7 @@ class IPOption_MRI(IPOption):
                                    IntField("", 0),
                                    length_from=lambda pkt:pkt.count*4) ]
 
-# # Counts the number of inversions inside list A
-# def count_inversions(A):
-#     count = 0
-#     for i in range(0, len(A) - 1):
-#         for j in range(i, len(A)):
-#             if A[i] > A[j]:
-#                 count += 1
-#     return count
-
+# Helper function used retrieve packet layers
 def get_packet_layers(packet):
     counter = 0
     while True:
@@ -91,11 +85,7 @@ def get_packet_layers(packet):
         counter += 1
 
 def handle_pkt(pkt):
-    if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
-        # print count
-        # print pkt[KVSQuery].switchID
-        # print pkt[KVSQuery].key
-        # print pkt[KVSQuery].key2
+    if KVSQuery in pkt and pkt[KVSQuery].padding == 1 and pkt[KVSQuery].clientID == 0:
         if pkt[KVSQuery].rateLimitReached == 1:
             print "Error: Rate limit has been reached for Client " + str(pkt[KVSQuery].clientID)
             sys.stdout.flush()
@@ -115,25 +105,27 @@ def handle_pkt(pkt):
 
         # Comment out ping/pongs for MS3 testing
         if pkt[KVSQuery].pingPong == 2:
-            # print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
+            #print "Pong received by Switch " + str(pkt[KVSQuery].switchID)
             # print "------------------------"
             sys.stdout.flush()
             return
         if pkt[KVSQuery].pingPong == 3:
-            # print "Pings/pongs are not within bound. Failure: Switch " + str(pkt[KVSQuery].switchID)
+            #print "Pings/pongs are not within bound. Failure: Switch " + str(pkt[KVSQuery].switchID)
             # print "------------------------"
             sys.stdout.flush()
             return
 
+        # Display get request results
         if pkt[KVSQuery].queryType == 0:
             if pkt[Response].isNull == 0:
-                print "NULL" # Replace with large number
+                print "NULL"
             else:
                 print pkt[Response].value
+        # Display put request results
         elif pkt[KVSQuery].queryType == 1:
             print 'Value stored.'
+        # Display range and select request results by reading each header stack layer
         elif pkt[KVSQuery].queryType == 2:
-            #print pkt[KVSQuery].switchID
             for layer in reversed(list(get_packet_layers(pkt))):
                 if layer.name == "Response" and layer.nextType == 0:
                     if layer.isNull == 0:

@@ -18,6 +18,7 @@ KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
 RESPONSE_PROTOCOL = 0x1234
 
+# Packet used to send request information for the query
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
@@ -30,6 +31,7 @@ class KVSQuery(Packet):
                 BitField("queryType", 0, 2),
                 BitField("padding", 0, 2)]
 
+# Packet used to return query results as a response header
 class Response(Packet):
     name = "Response"
     fields_desc= [IntField("value", 0),
@@ -68,15 +70,7 @@ class IPOption_MRI(IPOption):
                                    IntField("", 0),
                                    length_from=lambda pkt:pkt.count*4) ]
 
-# # Counts the number of inversions inside list A
-# def count_inversions(A):
-#     count = 0
-#     for i in range(0, len(A) - 1):
-#         for j in range(i, len(A)):
-#             if A[i] > A[j]:
-#                 count += 1
-#     return count
-
+# Helper function used retrieve packet layers
 def get_packet_layers(packet):
     counter = 0
     while True:
@@ -88,18 +82,20 @@ def get_packet_layers(packet):
         counter += 1
 
 def handle_pkt(pkt):
-    #pkt.show2()
     if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
+        # Display get request results
         if pkt[KVSQuery].queryType == 0:
             if pkt[Response].isNull == 0:
-                print "NULL" # Replace with large number
+                print "NULL"
             else:
-                print pkt[Response].value  
+                print pkt[Response].value
+        # Display put request results
         elif pkt[KVSQuery].queryType == 1:
             if pkt[Response].isNull == 1:
                 print "Unable to store value. Too many versions."
             else:
                 print 'Value stored.'
+        # Display range and select request results by reading each header stack layer
         elif pkt[KVSQuery].queryType == 2:
             for layer in reversed(list(get_packet_layers(pkt))):
                 if layer.name == "Response" and layer.nextType == 0:
