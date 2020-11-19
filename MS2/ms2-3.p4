@@ -178,30 +178,29 @@ control MyIngress(inout headers hdr,
     }
 
     action get() {
-        // database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
-        // isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);
+        // Read database value associated with the key into the top response header stack
         database.read(hdr.response[0].value, hdr.kvsQuery.key);
+        // Check isFilled register to ensure key-value pair exists
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
     }
 
     action put() {
+        // Write database value given key
         database.write(hdr.kvsQuery.key, hdr.kvsQuery.value);
         isFilled.write(hdr.kvsQuery.key, 1);
     }
 
     action rangeGet() {
+        // Push a new header to the response header stack
         hdr.response.push_front(1);
         hdr.response[0].setValid();
+        // Perform get operation
 		database.read(hdr.response[0].value, hdr.kvsQuery.key);
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
+        // Increment key for next recirculation
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
-        // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
     
-    // 0: GET
-    // 1: PUT
-    // 2: RANGE
-    // 3: SELECT
     table Ops {
         key = {
             hdr.kvsQuery.queryType: exact;
@@ -221,36 +220,17 @@ control MyIngress(inout headers hdr,
             Ops.apply();
             hdr.kvsQuery.padding = 1;
             hdr.kvsQuery.switchID = 3;
-            // TODO: always send pong for now
+            // Report pong if packet is a ping
             if (hdr.kvsQuery.pingPong == 1) {
                 hdr.kvsQuery.pingPong = 2;
             }
+            
+            // Recirculate only for ranges and non-ping packets
             if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.pingPong != 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
-            		// clone(CloneType.I2E, 1);
             		recirculate(meta);
             	}
             }
-
-            // if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
-            //     // Normal packet
-            //     // Forwarding.apply();
-            //     // Ops.apply();
-            //     // hdr.kvsQuery.padding = 1;
-            //     if (hdr.kvsQuery.queryType == 2) {
-            //         recirculate(meta);
-            //     }
-            // } else if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
-            //     // Recirculated packet
-            //     // hdr.ipv4.ttl = 2;
-            //     Forwarding.apply();
-            //     Ops.apply();
-            //     if (hdr.kvsQuery.key < hdr.kvsQuery.key2) {
-            //         
-            //         clone(CloneType.I2E, 1);
-            //         recirculate(meta);
-            //     }
-            // }
         }
     }
 }

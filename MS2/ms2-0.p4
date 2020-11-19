@@ -252,6 +252,7 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
     apply {  
+        // Send pings for any cloned packets
         if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_CLONE) {
             hdr.kvsQuery.pingPong = 1;
         }

@@ -20,6 +20,7 @@ KVSQUERY_PROTOCOL = 252
 TCP_PROTOCOL = 6
 RESPONSE_PROTOCOL = 0x1234
 
+# Packet used to send request information for the query
 class KVSQuery(Packet):
     name = "KVSQuery"
     fields_desc= [BitField("protocol", 0, 8),
@@ -35,6 +36,7 @@ class KVSQuery(Packet):
                 BitField("readWriteAccess", 0, 7),
                 BitField("rateLimitReached", 0, 1)]
 
+# Packet used to return query results as a response header
 class Response(Packet):
     name = "Response"
     fields_desc= [IntField("value", 0),
@@ -60,11 +62,7 @@ def get_if():
         exit(1)
     return iface
 
-
-def randStr(N=10):
-    return ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(N))
-
-
+# Helper to split the current range by the size, and send multiple range requests
 def splitRange(addr, iface, lower, upper, size = 10):
     if upper > 1025 or lower > 1025 or upper < 0 or lower < 0 or lower > upper:
         print 'invalid value'
@@ -102,7 +100,7 @@ def main():
 
     print "sending on interface %s to %s" % (iface, str(addr))
 
-
+    # Handle and send get request
     if sys.argv[1] == "get":
         if len(sys.argv) < 3:
             print 'pass 1 more argument:"<key>"'
@@ -113,7 +111,8 @@ def main():
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)
         pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=0, key=int(sys.argv[2]), clientID = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "get"
-        sendp(pkt, iface=iface, verbose=False)       
+        sendp(pkt, iface=iface, verbose=False)  
+    # Handle and send put request      
     elif sys.argv[1] == "put":
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<key>" "<value>"'
@@ -124,12 +123,14 @@ def main():
         pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff', type=RESPONSE_PROTOCOL)
         pkt = pkt / Response(nextType = 1)
         pkt = pkt / IP(dst=addr, proto=KVSQUERY_PROTOCOL) / KVSQuery(protocol=TCP_PROTOCOL, queryType=1, key=int(sys.argv[2]), value=int(sys.argv[3]), clientID = 1) / TCP(dport=1234, sport=random.randint(49152,65535)) / "put"
-        sendp(pkt, iface=iface, verbose=False)   
+        sendp(pkt, iface=iface, verbose=False)  
+    # Handle and send range request  
     elif sys.argv[1] == "range":
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<key1>" "<key2>"'
             exit(1)
         splitRange(addr, iface, int(sys.argv[2]), int(sys.argv[3]))
+    # Handle and send select request 
     elif sys.argv[1] == "select":
         if len(sys.argv) < 4:
             print 'pass 2 more arguments:"<operand>" "<key>"'
@@ -159,9 +160,6 @@ def main():
             upper = int(sys.argv[3]) + 1
             lower = int(sys.argv[3])
         splitRange(addr, iface, lower, upper)
-        # pkt = Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-        # pkt = pkt / IP(dst=addr, proto=QUERY_PROTOCOL) / Query(protocol=TCP_PROTOCOL) / TCP(dport=1234, sport=random.randint(49152,65535)) / "query"
-
 
 if __name__ == '__main__':
     main()

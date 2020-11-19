@@ -181,10 +181,12 @@ control MyIngress(inout headers hdr,
 
     action get() {
         bit<32> versionNum = hdr.kvsQuery.versionNum;
-        // database.read(hdr.kvsQuery.value, hdr.kvsQuery.key);
-        // isFilled.read(hdr.kvsQuery.isNull, hdr.kvsQuery.key);{
+        // Read database value associated with the key into the top response header stack
         database.read(hdr.response[0].value, hdr.kvsQuery.key + 1025 * versionNum);
+        // Check isFilled register to ensure key-value pair exists
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
+
+        // Reset isNull if requested version is greater than the current version of the key-value pair 
         bit<32> latest = 0;
         latestVersion.read(latest, hdr.kvsQuery.key);
         if (hdr.kvsQuery.versionNum > latest - 1) {
@@ -195,23 +197,27 @@ control MyIngress(inout headers hdr,
     action put() {
         bit<32> versionNum = 0;
         latestVersion.read(versionNum, hdr.kvsQuery.key);
+        // Write database value given key and versionNum
         database.write(hdr.kvsQuery.key + 1025 * versionNum, hdr.kvsQuery.value);
         isFilled.write(hdr.kvsQuery.key, 1);
     }
 
     action rangeGet() {
         bit<32> versionNum = hdr.kvsQuery.versionNum;
+        // Push a new header to the response header stack
         hdr.response.push_front(1);
         hdr.response[0].setValid();
+        // Perform get operation
         database.read(hdr.response[0].value, hdr.kvsQuery.key + 1025 * versionNum);
         isFilled.read(hdr.response[0].isNull, hdr.kvsQuery.key);
+        // Reset isNull if requested version is greater than the current version of the key-value pair 
         bit<32> latest = 0;
         latestVersion.read(latest, hdr.kvsQuery.key);
         if (hdr.kvsQuery.versionNum > latest - 1) {
             hdr.response[0].isNull = 0;
         }
+        // Increment key for next recirculation
         hdr.kvsQuery.key = hdr.kvsQuery.key + 1;
-        // hdr.kvsQuery.index = hdr.kvsQuery.index + 1;
     }
     
     table Forwarding {
@@ -224,10 +230,6 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    // 0: GET
-    // 1: PUT
-    // 2: RANGE
-    // 3: SELECT
     table Ops {
         key = {
             hdr.kvsQuery.queryType: exact;
@@ -247,7 +249,7 @@ control MyIngress(inout headers hdr,
             Forwarding.apply();
             Ops.apply();
             hdr.kvsQuery.padding = 1;
-            // Cap the version number to 5
+            // Cap the version number to 5 for any put operations
             if (hdr.kvsQuery.queryType == 1) {
                 bit<32> versionNum = 0;
                 latestVersion.read(versionNum, hdr.kvsQuery.key);
@@ -260,30 +262,9 @@ control MyIngress(inout headers hdr,
             // Recirculate for range requests
             if (hdr.kvsQuery.queryType == 2) {
             	if (hdr.kvsQuery.key < hdr.kvsQuery.key2){
-            		// clone(CloneType.I2E, 1);
             		recirculate(meta);
             	}
             }
-
-            // if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
-            //     // Normal packet
-            //     // Forwarding.apply();
-            //     // Ops.apply();
-            //     // hdr.kvsQuery.padding = 1;
-            //     if (hdr.kvsQuery.queryType == 2) {
-            //         recirculate(meta);
-            //     }
-            // } else if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_RECIRC) {
-            //     // Recirculated packet
-            //     // hdr.ipv4.ttl = 2;
-            //     Forwarding.apply();
-            //     Ops.apply();
-            //     if (hdr.kvsQuery.key < hdr.kvsQuery.key2) {
-            //         
-            //         clone(CloneType.I2E, 1);
-            //         recirculate(meta);
-            //     }
-            // }
         }
     }
 }

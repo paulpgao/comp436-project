@@ -173,12 +173,14 @@ control MyIngress(inout headers hdr,
     register <bit<32>>(2) rateLimitRequests; // Alice goes in slot 0, Bob in slot 1
 
     action setAlice() {
+        // Set ACL rules for Alice
         if (hdr.kvsQuery.queryType == 1 && hdr.kvsQuery.key > 512) {
             hdr.kvsQuery.readWriteAccess = 2;
         }
     }
 
     action setBob() {
+        // Set ACL rules for Bob
         if (hdr.kvsQuery.queryType == 0 && hdr.kvsQuery.key > 256) {
             hdr.kvsQuery.readWriteAccess = 1;
         } else if (hdr.kvsQuery.queryType == 1 && hdr.kvsQuery.key > 256) {
@@ -188,9 +190,6 @@ control MyIngress(inout headers hdr,
         } else if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.key > 256) {
             hdr.kvsQuery.readWriteAccess = 1;
         } 
-        // else if (hdr.kvsQuery.queryType == 2 && hdr.kvsQuery.key2 > 257) {
-        //     hdr.kvsQuery.key2 = 257;
-        // }
     }
 
     table ACL {
@@ -208,7 +207,7 @@ control MyIngress(inout headers hdr,
         if (hdr.response[0].isValid()) {
             ACL.apply();
 
-            // Check if rate limit has been reached for clients
+            // Check if rate limit has been reached for client 0 and client 1
             if (standard_metadata.ingress_port == 1 && hdr.kvsQuery.clientID == 0) {
                 bit<32> numAliceRequests = 0;
                 rateLimitRequests.read(numAliceRequests, 0);
@@ -326,6 +325,7 @@ control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
     apply {  
+        // Send pings for any cloned packets
         if (standard_metadata.instance_type == PKT_INSTANCE_TYPE_INGRESS_CLONE) {
             hdr.kvsQuery.pingPong = 1;
         }
