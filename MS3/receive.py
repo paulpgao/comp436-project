@@ -85,7 +85,7 @@ def get_packet_layers(packet):
         counter += 1
 
 def handle_pkt(pkt):
-    if KVSQuery in pkt and pkt[KVSQuery].padding == 1 and pkt[KVSQuery].clientID == 0:
+    if KVSQuery in pkt and pkt[KVSQuery].padding == 1:
         if pkt[KVSQuery].rateLimitReached == 1:
             print "Error: Rate limit has been reached for Client " + str(pkt[KVSQuery].clientID)
             sys.stdout.flush()
